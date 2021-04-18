@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:jagu_meet/model/note.dart';
 import 'package:jagu_meet/widgets/dialogs.dart';
-import '../utils/databasehelper_scheduled.dart';
+import '../../utils/databasehelper_scheduled.dart';
 import 'package:date_time_picker/date_time_picker.dart';
-import '../theme/theme.dart';
-import '../theme/themeNotifier.dart';
+import '../../theme/theme.dart';
+import '../../theme/themeNotifier.dart';
 import 'package:provider/provider.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:jagu_meet/classes/focusNode.dart';
@@ -69,6 +69,30 @@ class _NoteScreenState extends State<NoteScreen> {
   bool _dateError = false;
   bool _fromError = false;
   bool _toError = false;
+
+  bool hateError = false;
+  List<String> hateSpeech = ['bitch', 'fuck', 'fuck you', 'Fuck', 'Fuck you', 'sex', 'Sex', 'piss', 'rascal', 'bastard',
+    'xxx', 'porn', 'terrorism', 'idiot', 'F*ck you', 'F*ck', 'f*ck you', 'f*ck', 'Shit', 'shit', 'dick', 'Dick',
+    'Asshole', 'asshole', '****', '***', 'madarchod', 'behenchod' 'maa ki', 'maaki', 'maki', 'lund', 'chut', 'chutad',
+    'bhosdike', 'bsdk', 'betichod', 'chutiya', 'harami', 'chut', 'haramkhor'];
+
+  hateDetect(final TextEditingController controller) {
+    for (var i = 0; i <= hateSpeech.length; i++) {
+      if (controller.text.contains(hateSpeech[i])) {
+        setState(() {
+          hateError = true;
+        });
+      } else if (controller.text.toLowerCase().contains(hateSpeech[i])) {
+        setState(() {
+          hateError = true;
+        });
+      } else if (controller.text.toUpperCase().contains(hateSpeech[i])) {
+        setState(() {
+          hateError = true;
+        });
+      } else {}
+    }
+  }
 
   void check() {
     setState(() {
@@ -322,6 +346,7 @@ class _NoteScreenState extends State<NoteScreen> {
                       autofocus: false,
                       onChanged: (val) {
                         isEmpty();
+                        hateDetect(_titleController);
                       },
                       decoration: InputDecoration(
                         focusedBorder: OutlineInputBorder(
@@ -335,7 +360,7 @@ class _NoteScreenState extends State<NoteScreen> {
                         contentPadding: const EdgeInsets.only(
                             top: 12.0, bottom: 12, left: 10),
                         errorText:
-                            _titleError ? 'Meeting Topic is mandatory' : null,
+                            hateError ? 'Hate speech detected!' : null,
                         border: OutlineInputBorder(
                           borderRadius: const BorderRadius.all(
                             const Radius.circular(10.0),

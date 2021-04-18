@@ -5,11 +5,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:jagu_meet/model/note.dart';
+import 'package:jagu_meet/screens/settings/hostingSettings.dart';
+//import 'package:jagu_meet/sever_db/host meets db/host controller.dart';
+//import 'package:jagu_meet/sever_db/host meets db/host meet db.dart';
 import 'package:jagu_meet/theme/themeNotifier.dart';
+import 'package:jagu_meet/utils/host_db_helper.dart';
 import 'package:jagu_meet/widgets/dialogs.dart';
-import 'package:jitsi_meet/feature_flag/feature_flag.dart';
 import 'package:jitsi_meet/jitsi_meet.dart';
-import 'package:jitsi_meet/jitsi_meeting_listener.dart';
 import 'package:package_info/package_info.dart';
 import 'package:provider/provider.dart';
 import 'package:jagu_meet/theme/theme.dart';
@@ -20,6 +23,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:jagu_meet/classes/focusNode.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class HostPage extends StatefulWidget {
   final name;
@@ -54,6 +58,8 @@ class _HostPageState extends State<HostPage> {
 
   var _darkTheme;
 
+  List<Note1> items1 = new List();
+
   FocusNode myFocusNode2 = FocusNode();
   FocusNode myFocusNode3 = FocusNode();
 
@@ -78,6 +84,7 @@ class _HostPageState extends State<HostPage> {
   bool isEnabled;
   bool _hostValidateError = false;
   bool _hostIdError = false;
+  bool inMeeting = false;
 
   String _userName;
   String _userEmail;
@@ -87,6 +94,17 @@ class _HostPageState extends State<HostPage> {
   var webLink = 'meet.jit.si/';
 
   String version = '.';
+
+  DatabaseHelper1 db1 = new DatabaseHelper1();
+  initDB() {
+    db1.getAllNotes1().then((notes1) {
+      setState(() {
+        notes1.forEach((note1) {
+          items1.add(Note1.fromMap(note1));
+        });
+      });
+    });
+  }
 
   getAppInfo() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
@@ -244,6 +262,7 @@ class _HostPageState extends State<HostPage> {
             color: Colors.transparent,
             child: Text(
               'Submit',
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: themeNotifier.getTheme() == darkTheme
                     ? Colors.blueAccent
@@ -292,6 +311,7 @@ class _HostPageState extends State<HostPage> {
             color: Colors.transparent,
             child: Text(
               'Not Now',
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: themeNotifier.getTheme() == darkTheme
                     ? Colors.blueAccent
@@ -353,8 +373,119 @@ class _HostPageState extends State<HostPage> {
     getSettings();
     getAppInfo();
     getDevice();
+    initDB();
     isEmptyHost();
   }
+
+  bool hateError = false;
+  List<String> hateSpeech = [
+    'bitch',
+    'fuck',
+    'fuck you',
+    'Fuck',
+    'Fuck you',
+    'sex',
+    'Sex',
+    'piss',
+    'rascal',
+    'bastard',
+    'xxx',
+    'porn',
+    'terrorism',
+    'idiot',
+    'F*ck you',
+    'F*ck',
+    'f*ck you',
+    'f*ck',
+    'Shit',
+    'shit',
+    'dick',
+    'Dick',
+    'Asshole',
+    'asshole',
+    '****',
+    '***',
+    'madarchod',
+    'behenchod' 'maa ki',
+    'maaki',
+    'maki',
+    'lund',
+    'chut',
+    'chutad',
+    'bhosdike',
+    'bsdk',
+    'betichod',
+    'chutiya',
+    'harami',
+    'chut',
+    'haramkhor'
+  ];
+
+  hateDetect(final TextEditingController controller) {
+    for (var i = 0; i < hateSpeech.length; i++) {
+      if (controller.text.contains(hateSpeech[i])) {
+        setState(() {
+          hateError = true;
+        });
+      } else if (controller.text.toLowerCase().contains(hateSpeech[i])) {
+        setState(() {
+          hateError = true;
+        });
+      } else if (controller.text.toUpperCase().contains(hateSpeech[i])) {
+        setState(() {
+          hateError = true;
+        });
+      } else {}
+    }
+  }
+
+  //final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
+  //Position _currentPosition;
+  //String _currentAddress;
+
+  //_getCurrentLocation() {
+  //geolocator
+  //.getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+  //.then((Position position) {
+  //setState(() {
+  //_currentPosition = position;
+  //});
+//
+  //_getAddressFromLatLng();
+  //}).catchError((e) {
+  //print(e);
+  //});
+  //}
+
+  //_getAddressFromLatLng() async {
+  //try {
+  //List<Placemark> p = await geolocator.placemarkFromCoordinates(
+  //_currentPosition.latitude, _currentPosition.longitude);
+//
+  //Placemark place = p[0];
+//
+  //setState(() {
+  //_currentAddress =
+  //"${place.locality}, ${place.postalCode}, ${place.country}";
+  //});
+  //} catch (e) {
+  //print(e);
+  //}
+  //}
+
+  //Future<void> _submitMeetingData(String meetid, String meettopic) async {
+  //String external = await FlutterIp.externalIP;
+  //String internal = await FlutterIp.internalIP;
+  //_getCurrentLocation();
+  //HostMeetingsDb hostMeetingsDb = HostMeetingsDb(meetid, meettopic,
+  //_userEmail, _userName, _currentAddress, internal, external);
+//
+  //HostServerController hostServerController =
+  //HostServerController((String response) {
+  //print(response);
+  //});
+  //hostServerController.submitHostData(hostMeetingsDb);
+  //}
 
   @override
   Widget build(BuildContext context) {
@@ -391,7 +522,6 @@ class _HostPageState extends State<HostPage> {
         ),
         body: SafeArea(
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 5),
             height: double.maxFinite,
             child: SingleChildScrollView(
               child: Column(
@@ -417,6 +547,15 @@ class _HostPageState extends State<HostPage> {
                         counterText: '',
                         isDense: true,
                         filled: true,
+                        suffixIcon: IconButton(
+                            onPressed: () {
+                              FocusManager.instance.primaryFocus
+                                  .unfocus();
+                              showRecentHosted();
+                            },
+                            icon: Icon(Icons.keyboard_arrow_down,
+                                size: 30, color: Colors.blue),
+                          ),
                         contentPadding: const EdgeInsets.only(
                             top: 12.0, bottom: 12, left: 10),
                         errorText: _hostIdError ? 'Invalid Meeting Id' : null,
@@ -449,6 +588,7 @@ class _HostPageState extends State<HostPage> {
                       onChanged: (val) {
                         isEmptyHost();
                         istyping(hostSubjectText);
+                        hateDetect(hostSubjectText);
                       },
                       decoration: InputDecoration(
                         focusedBorder: OutlineInputBorder(
@@ -474,9 +614,7 @@ class _HostPageState extends State<HostPage> {
                               }),
                         ),
                         //fillColor: Colors.white,
-                        errorText: _hostValidateError
-                            ? 'Meeting Topic is mandatory'
-                            : null,
+                        errorText: hateError ? 'Hate speech detected!' : null,
                         border: OutlineInputBorder(
                           borderRadius: const BorderRadius.all(
                             const Radius.circular(10.0),
@@ -628,6 +766,43 @@ class _HostPageState extends State<HostPage> {
                     color: themeNotifier.getTheme() == darkTheme
                         ? Color(0xFF303030)
                         : Colors.black12,
+                    indent: 15,
+                    endIndent: 0,
+                  ),
+                  ListTile(
+                    tileColor: themeNotifier.getTheme() == darkTheme
+                        ? Color(0xFF191919)
+                        : Color(0xFFf9f9f9),
+                    onTap: () => Navigator.push(
+                        context,
+                        CupertinoPageRoute(
+                            builder: (context) => hostingSettings())),
+                    title: Text(
+                      'More Settings',
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16,
+                      ),
+                    ),
+                    contentPadding:
+                        EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 20,
+                          color: Colors.grey,
+                        )
+                      ],
+                    ),
+                  ),
+                  Divider(
+                    height: 1,
+                    color: themeNotifier.getTheme() == darkTheme
+                        ? Color(0xFF303030)
+                        : Colors.black12,
                   ),
                   SizedBox(
                     height: 40.0,
@@ -648,7 +823,9 @@ class _HostPageState extends State<HostPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15.0),
                       ),
-                      onPressed: isEnabled
+                      onPressed: inMeeting
+                          ? null
+                          : isEnabled
                           ? () async {
                               setState(() {
                                 hostSubjectText.text.isEmpty
@@ -805,6 +982,322 @@ class _HostPageState extends State<HostPage> {
     );
   }
 
+  void _deleteNote(BuildContext context, Note1 note1, int position) async {
+    db1.deleteNote1(note1.id1).then((notes) {
+      setState(() {
+        items1.removeAt(position);
+      });
+    });
+  }
+
+  clearDB() async {
+    for (var i = 0; i < items1.length; i++) {
+      _deleteNote(context, items1[i], i);
+    }
+    await Future.delayed(Duration(milliseconds: 1000));
+    _deleteNote(context, items1[0], 0);
+  }
+
+  showRecentHosted() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+    showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: themeNotifier.getTheme() == darkTheme
+            ? Color(0xFF242424)
+            : Colors.white,
+        builder: (context) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.80,
+            decoration: BoxDecoration(
+              color: themeNotifier.getTheme() == darkTheme
+                  ? Color(0xFF242424)
+                  : Colors.white,
+            ),
+            child: Scaffold(
+              backgroundColor: themeNotifier.getTheme() == darkTheme
+                  ? Color(0xFF191919)
+                  : Colors.white,
+              appBar: AppBar(
+                iconTheme: themeNotifier.getTheme() == darkTheme
+                    ? IconThemeData(color: Colors.white)
+                    : IconThemeData(color: Colors.black),
+                backgroundColor: themeNotifier.getTheme() == darkTheme
+                    ? Color(0xFF191919)
+                    : Colors.white,
+                elevation: 5,
+                leading: IconButton(
+                  icon: Icon(Icons.clear),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                actions: [
+                  items1.isNotEmpty
+                      ? IconButton(
+                    onPressed: () {
+                      Navigator.of(context, rootNavigator: true).pop();
+                      clearDB();
+                    },
+                    icon: Icon(
+                      Icons.auto_delete_outlined,
+                      color: Colors.red,
+                    ),
+                  )
+                      : Container(),
+                ],
+                title: Text(
+                  'Your Meetings',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: themeNotifier.getTheme() == darkTheme
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                ),
+              ),
+              body: SafeArea(
+                child: Container(
+                  child: items1.isEmpty
+                      ? Center(
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image(
+                                image: AssetImage('assets/images/clock.png')),
+                            SizedBox(
+                              height: 10,
+                            ),
+                            Text(
+                              'No Meetings',
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.bold),
+                            )
+                          ]))
+                      : Container(
+                    height: double.maxFinite,
+                    width: double.maxFinite,
+                    child: SingleChildScrollView(
+                      child: Column(children: [
+                        ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: items1.length,
+                          separatorBuilder:
+                              (BuildContext context, int index) {
+                            return Divider(
+                              height: 1,
+                              color: themeNotifier.getTheme() == darkTheme
+                                  ? Color(0xFF242424)
+                                  : Colors.black12,
+                              indent: 15,
+                              endIndent: 0,
+                            );
+                          },
+                          itemBuilder:
+                              (BuildContext context, int position) {
+                            return Dismissible(
+                              background: Container(
+                                color: Colors.blue,
+                                child: Align(
+                                  child: Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.start,
+                                    children: <Widget>[
+                                      SizedBox(
+                                        width: 20,
+                                      ),
+                                      Icon(
+                                        Icons.videocam,
+                                        color: Colors.white,
+                                      ),
+                                      Text(" Start",
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                        textAlign: TextAlign.left,
+                                      ),
+                                    ],
+                                  ),
+                                  alignment: Alignment.centerLeft,
+                                ),
+                              ),
+                              secondaryBackground: Container(
+                                color: Colors.red,
+                                child: Align(
+                                  child: Row(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.end,
+                                    children: <Widget>[
+                                      Icon(
+                                        Icons.delete,
+                                        color: Colors.white,
+                                      ),
+                                      Text(
+                                        " Delete",
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                        textAlign: TextAlign.right,
+                                      ),
+                                      SizedBox(
+                                        width: 20,
+                                      ),
+                                    ],
+                                  ),
+                                  alignment: Alignment.centerRight,
+                                ),
+                              ),
+                              key: Key(items1[position].description1),
+                              onDismissed: (direction) {
+                                if (direction ==
+                                    DismissDirection.endToStart) {
+                                  _deleteNote(
+                                      context, items1[position], position);
+                                } else {
+                                  setState(() {
+                                    hostRoomText.text =
+                                    '${items1[position].description1}';
+                                    hostSubjectText.text =
+                                    '${items1[position].title1}';
+                                  });
+                                  isEmptyHost();
+                                  Navigator.of(context,
+                                      rootNavigator: true)
+                                      .pop();
+                                _hostRecentMeeting(
+                                      items1[position].chatEnabled1 == 1
+                                          ? true
+                                          : false,
+                                      items1[position].liveEnabled1 == 1
+                                          ? true
+                                          : false,
+                                      items1[position].raiseEnabled1 ==
+                                          1
+                                          ? true
+                                          : false,
+                                      items1[position].recordEnabled1 ==
+                                          1
+                                          ? true
+                                          : false,
+                                      items1[position]
+                                          .shareYtEnabled1 ==
+                                          1
+                                          ? true
+                                          : false,
+                                      items1[position]
+                                          .kickOutEnabled1 ==
+                                          1
+                                          ? true
+                                          : false,);
+                                }
+                              },
+                              child: ListTile(
+                                onTap: () {
+                                  setState(() {
+                                    hostRoomText.text =
+                                    '${items1[position].description1}';
+                                    hostSubjectText.text =
+                                    '${items1[position].title1}';
+                                  });
+                                  isEmptyHost();
+                                  Navigator.of(context,
+                                      rootNavigator: true)
+                                      .pop();
+                                  _hostRecentMeeting(
+                                      items1[position].chatEnabled1 == 1
+                                          ? true
+                                          : false,
+                                      items1[position].liveEnabled1 == 1
+                                          ? true
+                                          : false,
+                                      items1[position].raiseEnabled1 ==
+                                          1
+                                          ? true
+                                          : false,
+                                      items1[position].recordEnabled1 ==
+                                          1
+                                          ? true
+                                          : false,
+                                      items1[position]
+                                          .shareYtEnabled1 ==
+                                          1
+                                          ? true
+                                          : false,
+                                      items1[position]
+                                          .kickOutEnabled1 ==
+                                          1
+                                          ? true
+                                          : false,);
+                                },
+                                visualDensity: VisualDensity(
+                                    horizontal: 0, vertical: -4),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.horizontal(
+                                        right: Radius.circular(0),
+                                        left: Radius.circular(0))),
+                                trailing: Text(
+                                  items1[position].title1 == ''
+                                      ? ''
+                                      : '${items1[position].description1}',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: themeNotifier.getTheme() ==
+                                        darkTheme
+                                        ? Colors.white
+                                        : Colors.grey,
+                                  ),
+                                ),
+                                title: Text(
+                                  items1[position].title1 == ''
+                                      ? '${items1[position].description1}'
+                                      : '${items1[position].title1}',
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: themeNotifier.getTheme() ==
+                                        darkTheme
+                                        ? Colors.white
+                                        : Colors.black87,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  timeago
+                                      .format(DateTime.parse(
+                                      items1[position].time1))
+                                      .toString(),
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: themeNotifier.getTheme() ==
+                                        darkTheme
+                                        ? Colors.white
+                                        : Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                        Divider(
+                          height: 1,
+                          color: themeNotifier.getTheme() == darkTheme
+                              ? Color(0xFF303030)
+                              : Colors.black12,
+                        ),
+                      ]),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        });
+  }
+
   _onChatChanged(bool value) {
     setState(() {
       chatEnabled = value;
@@ -894,37 +1387,35 @@ class _HostPageState extends State<HostPage> {
     });
 
     try {
-      FeatureFlag featureFlag = FeatureFlag();
-      featureFlag.welcomePageEnabled = false;
-      featureFlag.resolution = FeatureFlagVideoResolution.HD_RESOLUTION;
-      featureFlag.pipEnabled = false;
+      Map<FeatureFlagEnum, bool> featureFlags = {
+        FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
+        //featureFlag.resolution = FeatureFlagVideoResolution.HD_RESOLUTION;
+        FeatureFlagEnum.PIP_ENABLED: false,
+      };
 
       // Here is an example, disabling features for each platform
       if (Platform.isAndroid) {
         // Disable ConnectionService usage on Android to avoid issues (see README)
-        featureFlag.callIntegrationEnabled = false;
-        featureFlag.inviteEnabled = false;
-        featureFlag.toolboxAlwaysVisible = false;
+        featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
+        featureFlags[FeatureFlagEnum.INVITE_ENABLED] = false;
+        featureFlags[FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE] = false;
       } else if (Platform.isIOS) {
         // Disable PIP on iOS as it looks weird
-        featureFlag.pipEnabled = false;
+        featureFlags[FeatureFlagEnum.PIP_ENABLED] = false;
       }
       if (chatEnabled == false) {
-        featureFlag.chatEnabled = false;
+        featureFlags[FeatureFlagEnum.CHAT_ENABLED] = false;
       }
 
-      if (timerEnabled == false) {
-        featureFlag.conferenceTimerEnabled = false;
-      }
-
+      //if (timerEnabled == false) {
+      //  featureFlag.conferenceTimerEnabled = false;
+      //}
       if (meetNameEnabled == false) {
-        featureFlag.meetingNameEnabled = false;
+        featureFlags[FeatureFlagEnum.MEETING_NAME_ENABLED] = false;
       }
 
       // Define meetings options here
-      var options = JitsiMeetingOptions()
-        ..room = hostRoomText.text
-            .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "")
+      var options = JitsiMeetingOptions(room: hostRoomText.text.replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""))
         ..serverURL = serverUrl
         ..subject = hostSubjectText.text
         ..userDisplayName = _userName
@@ -933,7 +1424,15 @@ class _HostPageState extends State<HostPage> {
         ..audioMuted = isAudioMuted
         ..videoMuted = isVideoMuted
         ..userAvatarURL = _userPhotoUrl
-        ..featureFlag = featureFlag;
+        ..featureFlags.addAll(featureFlags)
+        ..webOptions = {
+          "roomName": JitsiMeetingOptions(room: hostRoomText.text.replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "")).room,
+          "width": "100%",
+          "height": "100%",
+          "enableWelcomePage": false,
+          "chromeExtensionBanner": null,
+          "userInfo": {"displayName": _userName}
+        };
 
       debugPrint("JitsiMeetingOptions: $options");
       if (hostRoomText.text.length >= 10) {
@@ -951,7 +1450,7 @@ class _HostPageState extends State<HostPage> {
           } else {
             await JitsiMeet.joinMeeting(
               options,
-              listener: JitsiMeetingListener(onConferenceWillJoin: ({message}) {
+              listener: JitsiMeetingListener(onConferenceWillJoin: (message) {
                 Fluttertoast.showToast(
                     msg: 'Starting your meeting...',
                     toastLength: Toast.LENGTH_SHORT,
@@ -961,7 +1460,10 @@ class _HostPageState extends State<HostPage> {
                     textColor: Colors.white,
                     fontSize: 16.0);
                 debugPrint("${options.room} will join with message: $message");
-              }, onConferenceJoined: ({message}) async {
+              }, onConferenceJoined: (message) async {
+                setState(() {
+                  inMeeting = true;
+                });
                 Fluttertoast.showToast(
                     msg: 'Meeting Started',
                     toastLength: Toast.LENGTH_SHORT,
@@ -1004,8 +1506,35 @@ class _HostPageState extends State<HostPage> {
                       "Meeting Password - Host will share separately. ";
                   copyInvite(textshare);
                 } else {}
+                for (var i = 0; i < items1.length; i++) {
+                  if (items1[i].description1 != options.room) {
+                  } else {
+                    _deleteNote(context, items1[i], i);
+                  }
+                }
+                db1.saveNote1(Note1(
+                  hostSubjectText.text,
+                  hostRoomText.text,
+                  DateTime.now().toString(),
+                  chatEnabled == true ? 1 : 0,
+                  liveEnabled == true ? 1 : 0,
+                  recordEnabled == true ? 1 : 0,
+                  raiseEnabled == true ? 1 : 0,
+                  shareYtEnabled == true ? 1 : 0,
+                  kickEnabled == true ? 1 : 0,));
+                db1.getAllNotes1().then((notes1) {
+                  setState(() {
+                    items1.clear();
+                    notes1.forEach((note1) {
+                      items1.add(Note1.fromMap(note1));
+                    });
+                  });
+                });
                 debugPrint("${options.room} joined with message: $message");
-              }, onConferenceTerminated: ({message}) {
+              }, onConferenceTerminated: (message) {
+                setState(() {
+                  inMeeting = false;
+                });
                 Fluttertoast.showToast(
                     msg: 'Meeting Ended By You',
                     toastLength: Toast.LENGTH_SHORT,
@@ -1017,19 +1546,214 @@ class _HostPageState extends State<HostPage> {
                 isEmptyHost();
                 meetFeedback();
                 debugPrint("${options.room} terminated with message: $message");
-              }, onPictureInPictureWillEnter: ({message}) {
+              }, onPictureInPictureWillEnter: (message) {
                 debugPrint(
                     "${options.room} entered PIP mode with message: $message");
-              }, onPictureInPictureTerminated: ({message}) {
+              }, onPictureInPictureTerminated: (message) {
                 debugPrint(
                     "${options.room} exited PIP mode with message: $message");
-              }),
+              }, genericListeners: [
+                  JitsiGenericListener(
+                  eventName: 'readyToClose',
+                  callback: (dynamic message) {
+                    debugPrint("readyToClose callback");
+                  }),
+                ]));
               // by default, plugin default constraints are used
               //roomNameConstraints: new Map(), // to disable all constraints
               //roomNameConstraints: customContraints, // to use your own constraint(s)
-            );
           }
         }
+      }
+    } catch (error) {
+      Fluttertoast.showToast(
+          msg: "Couldn't Start Your Meeting",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.SNACKBAR,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0);
+      debugPrint("error: $error");
+    }
+  }
+
+  _hostRecentMeeting(bool ch, bool live, bool raise, bool record, bool yt,
+      bool kick) async {
+    String serverUrl =
+    serverText.text?.trim()?.isEmpty ?? "" ? null : serverText.text;
+
+    try {
+      Map<FeatureFlagEnum, bool> featureFlags = {
+        FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
+        //featureFlag.resolution = FeatureFlagVideoResolution.HD_RESOLUTION;
+        FeatureFlagEnum.PIP_ENABLED: false,
+      };
+
+      // Here is an example, disabling features for each platform
+      if (Platform.isAndroid) {
+        // Disable ConnectionService usage on Android to avoid issues (see README)
+        featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
+        featureFlags[FeatureFlagEnum.INVITE_ENABLED] = false;
+        featureFlags[FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE] = false;
+      } else if (Platform.isIOS) {
+        // Disable PIP on iOS as it looks weird
+        featureFlags[FeatureFlagEnum.PIP_ENABLED] = false;
+      }
+      if (ch == false) {
+        featureFlags[FeatureFlagEnum.CHAT_ENABLED] = false;
+      }
+
+      //if (timerEnabled == false) {
+      //  featureFlag.conferenceTimerEnabled = false;
+      //}
+      if (meetNameEnabled == false) {
+        featureFlags[FeatureFlagEnum.MEETING_NAME_ENABLED] = false;
+      }
+
+      // Define meetings options here
+      var options = JitsiMeetingOptions(room: hostRoomText.text
+          .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""))
+        ..serverURL = serverUrl
+        ..subject = hostSubjectText.text ?? 'Just Meet'
+        ..userDisplayName = _userName
+        ..userEmail = _userEmail
+        ..audioOnly = isAudioOnly
+        ..audioMuted = isAudioMuted
+        ..videoMuted = isVideoMuted
+        ..userAvatarURL = _userPhotoUrl
+        ..featureFlags.addAll(featureFlags)
+        ..webOptions = {
+          "roomName": JitsiMeetingOptions(room: hostRoomText.text
+              .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "")).room,
+          "width": "100%",
+          "height": "100%",
+          "enableWelcomePage": false,
+          "chromeExtensionBanner": null,
+          "userInfo": {"displayName": _userName}
+        };
+
+      debugPrint("JitsiMeetingOptions: $options");
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) {
+        Fluttertoast.showToast(
+            msg: 'No Internet Connection!',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.SNACKBAR,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.black,
+            textColor: Colors.white,
+            fontSize: 16.0);
+      } else {
+        await JitsiMeet.joinMeeting(
+          options,
+          listener: JitsiMeetingListener(onConferenceWillJoin: (message) {
+            Fluttertoast.showToast(
+                msg: 'Starting your meeting...',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
+            debugPrint("${options.room} will join with message: $message");
+          }, onConferenceJoined: (message) async {
+            setState(() {
+              inMeeting = true;
+            });
+            Fluttertoast.showToast(
+                msg: 'Meeting Started',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
+            if (copyEnabled == true) {
+              var dynamicLink = await createDynamicLink(
+                  meet: options.room.replaceAll(
+                      RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""),
+                  sub: options.subject,
+                  ch: ch.toString(),
+                  rh: raise.toString(),
+                  rm: record.toString(),
+                  ls: live.toString(),
+                  yt: yt.toString(),
+                  ko: kick.toString(),
+                  host: _userEmail);
+              var dynamicWeb = webLink +
+                  options.room.replaceAll(
+                      RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "");
+              final textshare =
+                  "${nameText.text} is inviting you to join a Just Meet meeting.  "
+                  "\n"
+                  "\n"
+                  "Meeting Id - ${options.room}  "
+                  "\n"
+                  "Meeting Topic - ${options.subject}.  "
+                  "\n"
+                  "\n"
+                  "Android Meeting URL - $dynamicLink  "
+                  "\n"
+                  "\n"
+                  "IOS and PC Meeting URL - $dynamicWeb "
+                  "\n"
+                  "\n"
+                  "Meeting Password - Host will share separately. ";
+              copyInvite(textshare);
+            } else {}
+            for (var i = 0; i < items1.length; i++) {
+              if (items1[i].description1 != options.room) {
+              } else {
+                _deleteNote(context, items1[i], i);
+              }
+            }
+            db1.saveNote1(Note1(
+              hostSubjectText.text,
+              hostRoomText.text,
+              DateTime.now().toString(),
+              ch == true ? 1 : 0,
+              live == true ? 1 : 0,
+              record == true ? 1 : 0,
+              raise == true ? 1 : 0,
+              yt == true ? 1 : 0,
+              kick == true ? 1 : 0,));
+            db1.getAllNotes1().then((notes1) {
+              setState(() {
+                items1.clear();
+                notes1.forEach((note1) {
+                  items1.add(Note1.fromMap(note1));
+                });
+              });
+            });
+            debugPrint("${options.room} joined with message: $message");
+          }, onConferenceTerminated: (message) {
+            setState(() {
+              inMeeting = false;
+            });
+            Fluttertoast.showToast(
+                msg: 'Meeting Ended By You',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
+            meetFeedback();
+            debugPrint("${options.room} terminated with message: $message");
+          }, onPictureInPictureWillEnter: (message) {
+            debugPrint(
+                "${options.room} entered PIP mode with message: $message");
+          }, onPictureInPictureTerminated: (message) {
+            debugPrint(
+                "${options.room} exited PIP mode with message: $message");
+          }, genericListeners: [
+            JitsiGenericListener(
+                eventName: 'readyToClose',
+                callback: (dynamic message) {
+                  debugPrint("readyToClose callback");
+                }),
+          ]),);
       }
     } catch (error) {
       Fluttertoast.showToast(
@@ -1049,37 +1773,36 @@ class _HostPageState extends State<HostPage> {
         serverText.text?.trim()?.isEmpty ?? "" ? null : serverText.text;
 
     try {
-      FeatureFlag featureFlag = FeatureFlag();
-      featureFlag.welcomePageEnabled = false;
-      featureFlag.resolution = FeatureFlagVideoResolution.HD_RESOLUTION;
-      featureFlag.pipEnabled = false;
+      Map<FeatureFlagEnum, bool> featureFlags = {
+        FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
+        //featureFlag.resolution = FeatureFlagVideoResolution.HD_RESOLUTION;
+        FeatureFlagEnum.PIP_ENABLED: false,
+      };
 
       // Here is an example, disabling features for each platform
       if (Platform.isAndroid) {
         // Disable ConnectionService usage on Android to avoid issues (see README)
-        featureFlag.callIntegrationEnabled = false;
-        featureFlag.inviteEnabled = false;
-        featureFlag.toolboxAlwaysVisible = false;
+        featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
+        featureFlags[FeatureFlagEnum.INVITE_ENABLED] = false;
+        featureFlags[FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE] = false;
       } else if (Platform.isIOS) {
         // Disable PIP on iOS as it looks weird
-        featureFlag.pipEnabled = false;
+        featureFlags[FeatureFlagEnum.PIP_ENABLED] = false;
       }
       if (chatEnabled == false) {
-        featureFlag.chatEnabled = false;
+        featureFlags[FeatureFlagEnum.CHAT_ENABLED] = false;
       }
 
-      if (timerEnabled == false) {
-        featureFlag.conferenceTimerEnabled = false;
-      }
-
+      //if (timerEnabled == false) {
+      //  featureFlag.conferenceTimerEnabled = false;
+      //}
       if (meetNameEnabled == false) {
-        featureFlag.meetingNameEnabled = false;
+        featureFlags[FeatureFlagEnum.MEETING_NAME_ENABLED] = false;
       }
 
       // Define meetings options here
-      var options = JitsiMeetingOptions()
-        ..room = widget.linkNName
-            .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "")
+      var options = JitsiMeetingOptions(room: widget.linkNName
+          .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""))
         ..serverURL = serverUrl
         ..subject = 'Personal Link Meeting'
         ..userDisplayName = _userName
@@ -1088,7 +1811,16 @@ class _HostPageState extends State<HostPage> {
         ..audioMuted = isAudioMuted
         ..videoMuted = isVideoMuted
         ..userAvatarURL = _userPhotoUrl
-        ..featureFlag = featureFlag;
+        ..featureFlags.addAll(featureFlags)
+        ..webOptions = {
+          "roomName": JitsiMeetingOptions(room: widget.linkNName
+              .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "")).room,
+          "width": "100%",
+          "height": "100%",
+          "enableWelcomePage": false,
+          "chromeExtensionBanner": null,
+          "userInfo": {"displayName": _userName}
+        };
 
       debugPrint("JitsiMeetingOptions: $options");
       if (hostRoomText.text.length >= 10) {
@@ -1106,7 +1838,10 @@ class _HostPageState extends State<HostPage> {
           } else {
             await JitsiMeet.joinMeeting(
               options,
-              listener: JitsiMeetingListener(onConferenceWillJoin: ({message}) {
+              listener: JitsiMeetingListener(onConferenceWillJoin: (message) {
+                setState(() {
+                  inMeeting = true;
+                });
                 Fluttertoast.showToast(
                     msg: 'Starting your meeting...',
                     toastLength: Toast.LENGTH_SHORT,
@@ -1116,7 +1851,7 @@ class _HostPageState extends State<HostPage> {
                     textColor: Colors.white,
                     fontSize: 16.0);
                 debugPrint("${options.room} will join with message: $message");
-              }, onConferenceJoined: ({message}) async {
+              }, onConferenceJoined: (message) async {
                 Fluttertoast.showToast(
                     msg: 'Meeting Started',
                     toastLength: Toast.LENGTH_SHORT,
@@ -1157,8 +1892,35 @@ class _HostPageState extends State<HostPage> {
                       "Meeting Password - Host will share separately. ";
                   copyInvite(textshare);
                 } else {}
+                for (var i = 0; i < items1.length; i++) {
+                  if (items1[i].description1 != options.room) {
+                  } else {
+                    _deleteNote(context, items1[i], i);
+                  }
+                }
+                db1.saveNote1(Note1(
+                  hostSubjectText.text,
+                  hostRoomText.text,
+                  DateTime.now().toString(),
+                  chatEnabled == true ? 1 : 0,
+                  liveEnabled == true ? 1 : 0,
+                  recordEnabled == true ? 1 : 0,
+                  raiseEnabled == true ? 1 : 0,
+                  shareYtEnabled == true ? 1 : 0,
+                  kickEnabled == true ? 1 : 0,));
+                db1.getAllNotes1().then((notes1) {
+                  setState(() {
+                    items1.clear();
+                    notes1.forEach((note1) {
+                      items1.add(Note1.fromMap(note1));
+                    });
+                  });
+                });
                 debugPrint("${options.room} joined with message: $message");
-              }, onConferenceTerminated: ({message}) {
+              }, onConferenceTerminated: (message) {
+                setState(() {
+                  inMeeting = false;
+                });
                 Fluttertoast.showToast(
                     msg: 'Meeting Ended By You',
                     toastLength: Toast.LENGTH_SHORT,
@@ -1170,17 +1932,19 @@ class _HostPageState extends State<HostPage> {
                 isEmptyHost();
                 meetFeedback();
                 debugPrint("${options.room} terminated with message: $message");
-              }, onPictureInPictureWillEnter: ({message}) {
+              }, onPictureInPictureWillEnter: (message) {
                 debugPrint(
                     "${options.room} entered PIP mode with message: $message");
-              }, onPictureInPictureTerminated: ({message}) {
+              }, onPictureInPictureTerminated: (message) {
                 debugPrint(
                     "${options.room} exited PIP mode with message: $message");
-              }),
-              // by default, plugin default constraints are used
-              //roomNameConstraints: new Map(), // to disable all constraints
-              //roomNameConstraints: customContraints, // to use your own constraint(s)
-            );
+              }, genericListeners: [
+                JitsiGenericListener(
+                    eventName: 'readyToClose',
+                    callback: (dynamic message) {
+                      debugPrint("readyToClose callback");
+                    }),
+              ]),);
           }
         }
       }
@@ -1214,37 +1978,36 @@ class _HostPageState extends State<HostPage> {
     });
 
     try {
-      FeatureFlag featureFlag = FeatureFlag();
-      featureFlag.welcomePageEnabled = false;
-      featureFlag.resolution = FeatureFlagVideoResolution.HD_RESOLUTION;
-      featureFlag.pipEnabled = false;
+      Map<FeatureFlagEnum, bool> featureFlags = {
+        FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
+        //featureFlag.resolution = FeatureFlagVideoResolution.HD_RESOLUTION;
+        FeatureFlagEnum.PIP_ENABLED: false,
+      };
 
       // Here is an example, disabling features for each platform
       if (Platform.isAndroid) {
         // Disable ConnectionService usage on Android to avoid issues (see README)
-        featureFlag.callIntegrationEnabled = false;
-        featureFlag.inviteEnabled = false;
-        featureFlag.toolboxAlwaysVisible = false;
+        featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
+        featureFlags[FeatureFlagEnum.INVITE_ENABLED] = false;
+        featureFlags[FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE] = false;
       } else if (Platform.isIOS) {
         // Disable PIP on iOS as it looks weird
-        featureFlag.pipEnabled = false;
+        featureFlags[FeatureFlagEnum.PIP_ENABLED] = false;
       }
       if (chatEnabled == false) {
-        featureFlag.chatEnabled = false;
+        featureFlags[FeatureFlagEnum.CHAT_ENABLED] = false;
       }
 
-      if (timerEnabled == false) {
-        featureFlag.conferenceTimerEnabled = false;
-      }
-
+      //if (timerEnabled == false) {
+      //  featureFlag.conferenceTimerEnabled = false;
+      //}
       if (meetNameEnabled == false) {
-        featureFlag.meetingNameEnabled = false;
+        featureFlags[FeatureFlagEnum.MEETING_NAME_ENABLED] = false;
       }
 
       // Define meetings options here
-      var options = JitsiMeetingOptions()
-        ..room = hostRoomText.text
-            .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "")
+      var options = JitsiMeetingOptions(room: hostRoomText.text
+          .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""))
         ..serverURL = serverUrl
         ..subject = hostSubjectText.text
         ..userDisplayName = _userName
@@ -1252,7 +2015,16 @@ class _HostPageState extends State<HostPage> {
         ..audioOnly = isAudioOnly
         ..audioMuted = isAudioMuted
         ..videoMuted = isVideoMuted
-        ..featureFlag = featureFlag;
+        ..featureFlags.addAll(featureFlags)
+        ..webOptions = {
+          "roomName": JitsiMeetingOptions(room: hostRoomText.text
+              .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "")).room,
+          "width": "100%",
+          "height": "100%",
+          "enableWelcomePage": false,
+          "chromeExtensionBanner": null,
+          "userInfo": {"displayName": _userName}
+        };
 
       debugPrint("JitsiMeetingOptions: $options");
       if (hostRoomText.text.length >= 10) {
@@ -1270,7 +2042,7 @@ class _HostPageState extends State<HostPage> {
           } else {
             await JitsiMeet.joinMeeting(
               options,
-              listener: JitsiMeetingListener(onConferenceWillJoin: ({message}) {
+              listener: JitsiMeetingListener(onConferenceWillJoin: (message) {
                 Fluttertoast.showToast(
                     msg: 'Starting your meeting...',
                     toastLength: Toast.LENGTH_SHORT,
@@ -1280,7 +2052,10 @@ class _HostPageState extends State<HostPage> {
                     textColor: Colors.white,
                     fontSize: 16.0);
                 debugPrint("${options.room} will join with message: $message");
-              }, onConferenceJoined: ({message}) async {
+              }, onConferenceJoined: (message) async {
+                setState(() {
+                  inMeeting = true;
+                });
                 Fluttertoast.showToast(
                     msg: 'Meeting Started',
                     toastLength: Toast.LENGTH_SHORT,
@@ -1323,8 +2098,35 @@ class _HostPageState extends State<HostPage> {
                       "Meeting Password - Host will share separately. ";
                   copyInvite(textshare);
                 } else {}
+                for (var i = 0; i < items1.length; i++) {
+                  if (items1[i].description1 != options.room) {
+                  } else {
+                    _deleteNote(context, items1[i], i);
+                  }
+                }
+                db1.saveNote1(Note1(
+                  hostSubjectText.text,
+                  hostRoomText.text,
+                  DateTime.now().toString(),
+                  chatEnabled == true ? 1 : 0,
+                  liveEnabled == true ? 1 : 0,
+                  recordEnabled == true ? 1 : 0,
+                  raiseEnabled == true ? 1 : 0,
+                  shareYtEnabled == true ? 1 : 0,
+                  kickEnabled == true ? 1 : 0,));
+                db1.getAllNotes1().then((notes1) {
+                  setState(() {
+                    items1.clear();
+                    notes1.forEach((note1) {
+                      items1.add(Note1.fromMap(note1));
+                    });
+                  });
+                });
                 debugPrint("${options.room} joined with message: $message");
-              }, onConferenceTerminated: ({message}) {
+              }, onConferenceTerminated: (message) {
+                setState(() {
+                  inMeeting = false;
+                });
                 Fluttertoast.showToast(
                     msg: 'Meeting Ended By You',
                     toastLength: Toast.LENGTH_SHORT,
@@ -1336,17 +2138,19 @@ class _HostPageState extends State<HostPage> {
                 isEmptyHost();
                 meetFeedback();
                 debugPrint("${options.room} terminated with message: $message");
-              }, onPictureInPictureWillEnter: ({message}) {
+              }, onPictureInPictureWillEnter: (message) {
                 debugPrint(
                     "${options.room} entered PIP mode with message: $message");
-              }, onPictureInPictureTerminated: ({message}) {
+              }, onPictureInPictureTerminated: (message) {
                 debugPrint(
                     "${options.room} exited PIP mode with message: $message");
-              }),
-              // by default, plugin default constraints are used
-              //roomNameConstraints: new Map(), // to disable all constraints
-              //roomNameConstraints: customContraints, // to use your own constraint(s)
-            );
+              }, genericListeners: [
+                JitsiGenericListener(
+                    eventName: 'readyToClose',
+                    callback: (dynamic message) {
+                      debugPrint("readyToClose callback");
+                    }),
+              ]),);
           }
         }
       }

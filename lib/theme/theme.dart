@@ -11,6 +11,12 @@ final darkTheme = ThemeData(
   scaffoldBackgroundColor: const Color(0xFF0d0d0d),
   canvasColor: const Color(0xFF242424),
   fontFamily: 'OpenSans',
+    pageTransitionsTheme: PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        }
+    )
 );
 
 final lightTheme = ThemeData(
@@ -23,4 +29,10 @@ final lightTheme = ThemeData(
   dividerColor: Colors.black12,
   scaffoldBackgroundColor: const Color(0xFFFFFFFF),
   fontFamily: 'OpenSans',
+    pageTransitionsTheme: PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        }
+    )
 );

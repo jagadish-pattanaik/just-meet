@@ -77,20 +77,40 @@ class Note1 {
   int _id1;
   String _title1;
   String _description1;
+  var _chatEnabled1;
+  var _liveEnabled1;
+  var _recordEnabled1;
+  var _raiseEnabled1;
+  var _shareYtEnabled1;
+  var _kickOutEnabled1;
+  String _time1;
 
-  Note1(this._title1, this._description1);
+  Note1(this._title1, this._description1, this._time1, this._chatEnabled1, this._liveEnabled1, this._recordEnabled1, this._raiseEnabled1,
+      this._shareYtEnabled1, this._kickOutEnabled1);
 
   Note1.map(dynamic obj) {
     this._id1 = obj['id1'];
     this._title1 = obj['title1'];
     this._description1 = obj['description1'];
+    this._time1 = obj['time'];
+    this._chatEnabled1 = obj['chatEnabled'];
+    this._liveEnabled1 = obj['liveEnabled'];
+    this._recordEnabled1 = obj['recordEnabled'];
+    this._raiseEnabled1 = obj['raiseEnabled'];
+    this._shareYtEnabled1 = obj['shareYtEnabled'];
+    this._kickOutEnabled1 = obj['kickOutEnabled'];
   }
 
   int get id1 => _id1;
-
   String get title1 => _title1;
-
   String get description1 => _description1;
+  String get time1 => _time1;
+  int get chatEnabled1 => _chatEnabled1;
+  int get liveEnabled1 => _liveEnabled1;
+  int get recordEnabled1 => _recordEnabled1;
+  int get raiseEnabled1 => _raiseEnabled1;
+  int get shareYtEnabled1 => _shareYtEnabled1;
+  int get kickOutEnabled1 => _kickOutEnabled1;
 
   Map<String, dynamic> toMap() {
     var map = new Map<String, dynamic>();
@@ -99,6 +119,13 @@ class Note1 {
     }
     map['title1'] = _title1;
     map['description1'] = _description1;
+    map['time1'] = _time1;
+    map['chatEnabled1'] = _chatEnabled1;
+    map['liveEnabled1'] = _liveEnabled1;
+    map['recordEnabled1'] = _recordEnabled1;
+    map['raiseEnabled1'] = _raiseEnabled1;
+    map['shareYtEnabled1'] = _shareYtEnabled1;
+    map['kickOutEnabled1'] = _kickOutEnabled1;
 
     return map;
   }
@@ -107,6 +134,13 @@ class Note1 {
     this._id1 = map['id1'];
     this._title1 = map['title1'];
     this._description1 = map['description1'];
+    this._time1 = map['time1'];
+    this._chatEnabled1 = map['chatEnabled1'];
+    this._liveEnabled1 = map['liveEnabled1'];
+    this._recordEnabled1 = map['recordEnabled1'];
+    this._raiseEnabled1 = map['raiseEnabled1'];
+    this._shareYtEnabled1 = map['shareYtEnabled1'];
+    this._kickOutEnabled1 = map['kickOutEnabled1'];
   }
 }
 

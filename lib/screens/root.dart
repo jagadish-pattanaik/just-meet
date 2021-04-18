@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:jagu_meet/screens/onboarding/ppolicy.dart';
 import 'loginPage.dart';
 import 'package:jagu_meet/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -8,19 +9,25 @@ class root extends StatefulWidget {
   _rootState createState() => _rootState();
 }
 
-enum AuthStatus {
-  notSignedIn,
-  SignedIn,
-}
-
 class _rootState extends State<root> {
-  AuthStatus authStatus;
   var signStatus;
+  var onBoardingStatus;
 
   @override
   initState() {
     super.initState();
     _getUserAuth();
+    _getUserIntro();
+  }
+
+  _getUserIntro() async {
+    await SharedPreferences.getInstance().then((prefs) {
+      prefs.getBool('intoStatus') ?? false;
+      setState(() {
+        onBoardingStatus = prefs.getBool('introStatus') ?? false;
+        //introStatus = onBoardingStatus == true ? IntroStatus.introduced : IntroStatus.fresher;
+      });
+    });
   }
 
   _getUserAuth() async {
@@ -28,23 +35,20 @@ class _rootState extends State<root> {
       prefs.getBool('signStatus') ?? false;
       setState(() {
         signStatus = prefs.getBool('signStatus') ?? false;
-        authStatus =
-            signStatus == true ? AuthStatus.SignedIn : AuthStatus.notSignedIn;
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    switch (authStatus) {
-      case AuthStatus.SignedIn:
+    if (onBoardingStatus == true) {
+      if (signStatus == true) {
         return MyApp();
-      case AuthStatus.notSignedIn:
+      } else {
         return LoginScreen();
+      }
+    } else {
+      return PriPolicy();
     }
-    return Container(
-      height: 0,
-      width: 0,
-    );
   }
 }

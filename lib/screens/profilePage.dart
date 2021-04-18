@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -8,7 +9,6 @@ import 'package:jagu_meet/theme/themeNotifier.dart';
 import 'package:jagu_meet/widgets/dialogs.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'loginPage.dart';
 
 class profilePage extends StatefulWidget {
@@ -167,6 +167,18 @@ class _profilePageState extends State<profilePage> {
                     tileColor: themeNotifier.getTheme() == darkTheme
                         ? Color(0xFF191919)
                         : Color(0xFFf9f9f9),
+                    onLongPress: () => Clipboard.setData(
+                        new ClipboardData(text: widget.pmeet))
+                        .then((_) {
+                      Fluttertoast.showToast(
+                          msg: 'PMI copied to clipboard',
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.SNACKBAR,
+                          timeInSecForIosWeb: 1,
+                          backgroundColor: Colors.black,
+                          textColor: Colors.white,
+                          fontSize: 16.0);
+                    }),
                     title: Text('Personal Meeting ID'),
                     trailing: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -209,6 +221,18 @@ class _profilePageState extends State<profilePage> {
                         ? Color(0xFF191919)
                         : Color(0xFFf9f9f9),
                     title: Text('Personal Link Name'),
+                    onLongPress: () =>
+                        Clipboard.setData(new ClipboardData(text: widget.linkName))
+                            .then((_) {
+                          Fluttertoast.showToast(
+                              msg: 'Personal Link Name copied to clipboard',
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.SNACKBAR,
+                              timeInSecForIosWeb: 1,
+                              backgroundColor: Colors.black,
+                              textColor: Colors.white,
+                              fontSize: 16.0);
+                        }),
                     trailing: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
@@ -304,7 +328,7 @@ class _profilePageState extends State<profilePage> {
                         _gSignIn.signOut();
                         onSignOut();
                         Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(
+                          CupertinoPageRoute(
                               builder: (BuildContext context) => LoginScreen()),
                           (Route<dynamic> route) => false,
                         );
@@ -331,6 +355,9 @@ class _profilePageState extends State<profilePage> {
                     color: themeNotifier.getTheme() == darkTheme
                         ? Color(0xFF303030)
                         : Colors.black12,
+                  ),
+                  SizedBox(
+                    height: 25,
                   ),
                 ],
               ),

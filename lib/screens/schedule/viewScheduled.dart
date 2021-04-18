@@ -5,24 +5,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+
 import 'package:fluttertoast/fluttertoast.dart';
+
 import 'package:jagu_meet/model/note.dart';
 import 'package:jagu_meet/utils/databasehelper_scheduled.dart';
 import 'package:jagu_meet/widgets/dialogs.dart';
-import 'package:jitsi_meet/feature_flag/feature_flag.dart';
 import 'package:jitsi_meet/jitsi_meet.dart';
-import 'package:jitsi_meet/jitsi_meeting_listener.dart';
 import 'package:package_info/package_info.dart';
 import 'package:rate_my_app/rate_my_app.dart';
 import 'package:share/share.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../theme/theme.dart';
-import '../theme/themeNotifier.dart';
+import '../../theme/theme.dart';
+import '../../theme/themeNotifier.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import 'NoteScreen.dart';
 import 'package:intl/intl.dart';
+//import 'package:jagu_meet/sever_db/host meets db/host controller.dart';
+//import 'package:jagu_meet/sever_db/host meets db/host meet db.dart';
+import 'package:flutter/foundation.dart';
 
 class viewScheduled extends StatefulWidget {
   final personalId;
@@ -114,6 +117,54 @@ class _viewScheduledState extends State<viewScheduled> {
           fontSize: 16.0);
     }
   }
+
+  //final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
+  //Position _currentPosition;
+  //String _currentAddress;
+
+  //_getCurrentLocation() {
+  //geolocator
+  //.getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+  //.then((Position position) {
+  //setState(() {
+  //_currentPosition = position;
+  //});
+//
+  //_getAddressFromLatLng();
+  //}).catchError((e) {
+  //print(e);
+  //});
+  //}
+
+  //_getAddressFromLatLng() async {
+  //try {
+  //List<Placemark> p = await geolocator.placemarkFromCoordinates(
+  //_currentPosition.latitude, _currentPosition.longitude);
+//
+  //Placemark place = p[0];
+//
+  //setState(() {
+  //_currentAddress =
+  //"${place.locality}, ${place.postalCode}, ${place.country}";
+  //});
+  //} catch (e) {
+  //print(e);
+  //}
+  //}
+
+  //Future<void> _submitMeetingData(String meetid, String meettopic) async {
+  //String external = await FlutterIp.externalIP;
+  //String internal = await FlutterIp.internalIP;
+  //_getCurrentLocation();
+  //HostMeetingsDb hostMeetingsDb = HostMeetingsDb(meetid, meettopic,
+  //widget.email, name, _currentAddress, internal, external);
+//
+  //HostServerController hostServerController =
+  //HostServerController((String response) {
+  //print(response);
+  //});
+  //hostServerController.submitHostData(hostMeetingsDb);
+  //}
 
   RateMyApp rateMyApp = RateMyApp(
     preferencesPrefix: 'rateMyApp_',
@@ -621,38 +672,37 @@ class _viewScheduledState extends State<viewScheduled> {
         serverText.text?.trim()?.isEmpty ?? "" ? null : serverText.text;
 
     try {
-      FeatureFlag featureFlag = FeatureFlag();
-      featureFlag.welcomePageEnabled = false;
-      featureFlag.pipEnabled = false;
-      featureFlag.resolution = FeatureFlagVideoResolution.HD_RESOLUTION;
+      Map<FeatureFlagEnum, bool> featureFlags = {
+        FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
+        FeatureFlagEnum.PIP_ENABLED: false,
+        //FeatureFlagEnum. = FeatureFlagVideoResolution.HD_RESOLUTION,
+      };
 
       // Here is an example, disabling features for each platform
       if (Platform.isAndroid) {
         // Disable ConnectionService usage on Android to avoid issues (see README)
-        featureFlag.callIntegrationEnabled = false;
-        featureFlag.inviteEnabled = false;
-        featureFlag.toolboxAlwaysVisible = false;
+        featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
+        featureFlags[FeatureFlagEnum.INVITE_ENABLED] = false;
+        featureFlags[FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE] = false;
       } else if (Platform.isIOS) {
         // Disable PIP on iOS as it looks weird
-        featureFlag.pipEnabled = false;
+        featureFlags[FeatureFlagEnum.PIP_ENABLED] = false;
       }
       if (items2[widget.num].chatEnabled2 == false) {
-        featureFlag.chatEnabled = false;
+        featureFlags[FeatureFlagEnum.CHAT_ENABLED] = false;
       }
 
-      if (timerEnabled == false) {
-        featureFlag.conferenceTimerEnabled = false;
-      }
-
+      //if (timerEnabled == false) {
+      //  featureFlag.conferenceTimerEnabled = false;
+      //}
       if (meetNameEnabled == false) {
-        featureFlag.meetingNameEnabled = false;
+        featureFlags[FeatureFlagEnum.MEETING_NAME_ENABLED] = false;
       }
 
       // Define meetings options here
-      var options = JitsiMeetingOptions()
-        ..room = items2[widget.num]
-            .description2
-            .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "")
+      var options = JitsiMeetingOptions(room: items2[widget.num]
+          .description2
+          .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""))
         ..serverURL = serverUrl
         ..subject = items2[widget.num].title2
         ..userDisplayName = widget.name
@@ -661,7 +711,15 @@ class _viewScheduledState extends State<viewScheduled> {
         ..audioMuted = isAudioMuted
         ..videoMuted = isVideoMuted
         ..userAvatarURL = widget.PhotoUrl
-        ..featureFlag = featureFlag;
+        ..featureFlags.addAll(featureFlags)
+        ..webOptions = {
+          "roomName": items2[widget.num].description2,
+          "width": "100%",
+          "height": "100%",
+          "enableWelcomePage": false,
+          "chromeExtensionBanner": null,
+          "userInfo": {"displayName": widget.name}
+        };
 
       debugPrint("JitsiMeetingOptions: $options");
       var connectivityResult = await (Connectivity().checkConnectivity());
@@ -677,7 +735,7 @@ class _viewScheduledState extends State<viewScheduled> {
       } else {
         await JitsiMeet.joinMeeting(
           options,
-          listener: JitsiMeetingListener(onConferenceWillJoin: ({message}) {
+          listener: JitsiMeetingListener(onConferenceWillJoin: (message) {
             Fluttertoast.showToast(
                 msg: 'Starting your meeting...',
                 toastLength: Toast.LENGTH_SHORT,
@@ -687,7 +745,7 @@ class _viewScheduledState extends State<viewScheduled> {
                 textColor: Colors.white,
                 fontSize: 16.0);
             debugPrint("${options.room} will join with message: $message");
-          }, onConferenceJoined: ({message}) async {
+          }, onConferenceJoined: (message) async {
             Fluttertoast.showToast(
                 msg: 'Meeting Started',
                 toastLength: Toast.LENGTH_SHORT,
@@ -730,8 +788,10 @@ class _viewScheduledState extends State<viewScheduled> {
                   "Meeting Password - Host will share separately. ";
               copyInvite(textshare);
             } else {}
+            //_submitMeetingData(
+            //   items2[widget.num].description2, items2[widget.num].title2);
             debugPrint("${options.room} joined with message: $message");
-          }, onConferenceTerminated: ({message}) {
+          }, onConferenceTerminated: (message) {
             Fluttertoast.showToast(
                 msg: 'Meeting Ended By You',
                 toastLength: Toast.LENGTH_SHORT,
@@ -742,14 +802,19 @@ class _viewScheduledState extends State<viewScheduled> {
                 fontSize: 16.0);
             meetFeedback();
             debugPrint("${options.room} terminated with message: $message");
-          }, onPictureInPictureWillEnter: ({message}) {
+          }, onPictureInPictureWillEnter: (message) {
             debugPrint(
                 "${options.room} entered PIP mode with message: $message");
-          }, onPictureInPictureTerminated: ({message}) {
+          }, onPictureInPictureTerminated: (message) {
             debugPrint(
                 "${options.room} exited PIP mode with message: $message");
-          }),
-        );
+          }, genericListeners: [
+            JitsiGenericListener(
+                eventName: 'readyToClose',
+                callback: (dynamic message) {
+                  debugPrint("readyToClose callback");
+                }),
+          ]),);
       }
     } catch (error) {
       Fluttertoast.showToast(
@@ -769,38 +834,37 @@ class _viewScheduledState extends State<viewScheduled> {
         serverText.text?.trim()?.isEmpty ?? "" ? null : serverText.text;
 
     try {
-      FeatureFlag featureFlag = FeatureFlag();
-      featureFlag.welcomePageEnabled = false;
-      featureFlag.pipEnabled = false;
-      featureFlag.resolution = FeatureFlagVideoResolution.HD_RESOLUTION;
+      Map<FeatureFlagEnum, bool> featureFlags = {
+        FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
+        FeatureFlagEnum.PIP_ENABLED: false,
+        //FeatureFlagEnum. = FeatureFlagVideoResolution.HD_RESOLUTION,
+      };
 
       // Here is an example, disabling features for each platform
       if (Platform.isAndroid) {
         // Disable ConnectionService usage on Android to avoid issues (see README)
-        featureFlag.callIntegrationEnabled = false;
-        featureFlag.inviteEnabled = false;
-        featureFlag.toolboxAlwaysVisible = false;
+        featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
+        featureFlags[FeatureFlagEnum.INVITE_ENABLED] = false;
+        featureFlags[FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE] = false;
       } else if (Platform.isIOS) {
         // Disable PIP on iOS as it looks weird
-        featureFlag.pipEnabled = false;
+        featureFlags[FeatureFlagEnum.PIP_ENABLED] = false;
       }
       if (items2[widget.num].chatEnabled2 == false) {
-        featureFlag.chatEnabled = false;
+        featureFlags[FeatureFlagEnum.CHAT_ENABLED] = false;
       }
 
-      if (timerEnabled == false) {
-        featureFlag.conferenceTimerEnabled = false;
-      }
-
+      //if (timerEnabled == false) {
+      //  featureFlag.conferenceTimerEnabled = false;
+      //}
       if (meetNameEnabled == false) {
-        featureFlag.meetingNameEnabled = false;
+        featureFlags[FeatureFlagEnum.MEETING_NAME_ENABLED] = false;
       }
 
       // Define meetings options here
-      var options = JitsiMeetingOptions()
-        ..room = items2[widget.num]
-            .description2
-            .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "")
+      var options = JitsiMeetingOptions(room: items2[widget.num]
+          .description2
+          .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""))
         ..serverURL = serverUrl
         ..subject = items2[widget.num].title2
         ..userDisplayName = widget.name
@@ -809,7 +873,15 @@ class _viewScheduledState extends State<viewScheduled> {
         ..audioMuted = isAudioMuted
         ..videoMuted = isVideoMuted
         ..userAvatarURL = widget.PhotoUrl
-        ..featureFlag = featureFlag;
+        ..featureFlags.addAll(featureFlags)
+        ..webOptions = {
+          "roomName": items2[widget.num].description2,
+          "width": "100%",
+          "height": "100%",
+          "enableWelcomePage": false,
+          "chromeExtensionBanner": null,
+          "userInfo": {"displayName": widget.name}
+        };
 
       debugPrint("JitsiMeetingOptions: $options");
       var connectivityResult = await (Connectivity().checkConnectivity());
@@ -825,7 +897,7 @@ class _viewScheduledState extends State<viewScheduled> {
       } else {
         await JitsiMeet.joinMeeting(
           options,
-          listener: JitsiMeetingListener(onConferenceWillJoin: ({message}) {
+          listener: JitsiMeetingListener(onConferenceWillJoin: (message) {
             Fluttertoast.showToast(
                 msg: 'Starting your meeting...',
                 toastLength: Toast.LENGTH_SHORT,
@@ -835,7 +907,7 @@ class _viewScheduledState extends State<viewScheduled> {
                 textColor: Colors.white,
                 fontSize: 16.0);
             debugPrint("${options.room} will join with message: $message");
-          }, onConferenceJoined: ({message}) async {
+          }, onConferenceJoined: (message) async {
             Fluttertoast.showToast(
                 msg: 'Meeting Started',
                 toastLength: Toast.LENGTH_SHORT,
@@ -878,8 +950,10 @@ class _viewScheduledState extends State<viewScheduled> {
                   "Meeting Password - Host will share separately. ";
               copyInvite(textshare);
             } else {}
+            // _submitMeetingData(
+            //    items2[widget.num].description2, items2[widget.num].title2);
             debugPrint("${options.room} joined with message: $message");
-          }, onConferenceTerminated: ({message}) {
+          }, onConferenceTerminated: (message) {
             Fluttertoast.showToast(
                 msg: 'Meeting Ended By You',
                 toastLength: Toast.LENGTH_SHORT,
@@ -890,14 +964,19 @@ class _viewScheduledState extends State<viewScheduled> {
                 fontSize: 16.0);
             meetFeedback();
             debugPrint("${options.room} terminated with message: $message");
-          }, onPictureInPictureWillEnter: ({message}) {
+          }, onPictureInPictureWillEnter: (message) {
             debugPrint(
                 "${options.room} entered PIP mode with message: $message");
-          }, onPictureInPictureTerminated: ({message}) {
+          }, onPictureInPictureTerminated: (message) {
             debugPrint(
                 "${options.room} exited PIP mode with message: $message");
-          }),
-        );
+          }, genericListeners: [
+            JitsiGenericListener(
+                eventName: 'readyToClose',
+                callback: (dynamic message) {
+                  debugPrint("readyToClose callback");
+                }),
+          ]),);
       }
     } catch (error) {
       Fluttertoast.showToast(
@@ -1026,7 +1105,7 @@ class _viewScheduledState extends State<viewScheduled> {
   void _navigateToNote(BuildContext context, Note2 note2) async {
     String result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => NoteScreen(note2, personalId)),
+      CupertinoPageRoute(builder: (context) => NoteScreen(note2, personalId)),
     );
 
     if (result == 'update') {

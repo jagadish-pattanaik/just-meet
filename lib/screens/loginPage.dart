@@ -1,13 +1,22 @@
+import 'package:device_info/device_info.dart';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+
 import 'package:flutter_offline/flutter_offline.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:jagu_meet/main.dart';
-import 'package:jagu_meet/screens/webview.dart';
+import 'package:jagu_meet/screens/others/webview.dart';
+//import 'package:jagu_meet/sever_db/users%20db/users_db.dart';
+//import 'package:jagu_meet/sever_db/users%20db/users_db_controller.dart';
 import 'package:jagu_meet/theme/theme.dart';
 import 'package:jagu_meet/theme/themeNotifier.dart';
+//import 'package:mobile_number/mobile_number.dart';
+//import 'package:mobile_number/sim_card.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -28,45 +37,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = new GoogleSignIn();
 
-  Future<User> _signIn(BuildContext context) async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.none) {
-      Fluttertoast.showToast(
-          msg: 'No Internet Connection!',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
-    } else {
-      Fluttertoast.showToast(
-          msg: 'Signing In...',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
-
-      GoogleSignInAccount googleSignInAccount = await _googleSignIn.signIn();
-      GoogleSignInAuthentication gsa = await googleSignInAccount.authentication;
-
-      final AuthCredential credential = GoogleAuthProvider.credential(
-          idToken: gsa.idToken, accessToken: gsa.accessToken);
-
-      User user = (await _auth.signInWithCredential(credential)).user;
-
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (BuildContext context) => MyApp(),
-          ));
-      onSignIn();
-    }
-    // return userDetails;
-  }
-
   var connectivityResult;
 
   checkConnection() async {
@@ -86,6 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    checkPermissions();
     checkConnection();
     getBg();
   }
@@ -129,6 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Text(
             'Connect with Friends',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
                 fontWeight: FontWeight.bold, fontSize: 20, color: Colors.blue),
           ),
@@ -137,6 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           Text(
             'Start or join meeting on the go',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
           ),
           Image.asset(
@@ -153,6 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Text(
             'Chat With Your Team',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
                 fontWeight: FontWeight.bold, fontSize: 20, color: Colors.blue),
           ),
@@ -161,6 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           Text(
             'Chat while on meeting and share your content',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
           ),
           Image.asset(
@@ -177,6 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Text(
             'Unlimited time and participants',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
                 fontWeight: FontWeight.bold, fontSize: 20, color: Colors.blue),
           ),
@@ -185,6 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           Text(
             'No more restrictions on long and group talks',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
           ),
           Image.asset(
@@ -201,6 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Text(
             'Low Bandwidth Mode',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
                 fontWeight: FontWeight.bold, fontSize: 20, color: Colors.blue),
           ),
@@ -209,6 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           Text(
             'Low Internet speed? no problem, Just Meet',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
           ),
           Image.asset(
@@ -225,6 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Text(
             'Enhanced Encryption and Security',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
                 fontWeight: FontWeight.bold, fontSize: 20, color: Colors.blue),
           ),
@@ -233,6 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           Text(
             'Your data is safe and encrypted',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
           ),
           Image.asset(
@@ -249,6 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Text(
             'Waiting Room',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
                 fontWeight: FontWeight.bold, fontSize: 20, color: Colors.blue),
           ),
@@ -257,6 +239,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           Text(
             'Participants can join only after approval',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
           ),
           Image.asset(
@@ -273,6 +256,7 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Text(
             'Share YouTube Videos',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
                 fontWeight: FontWeight.bold, fontSize: 20, color: Colors.blue),
           ),
@@ -281,6 +265,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           Text(
             'Share YouTube videos in meetings with ease',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
           ),
           Image.asset(
@@ -297,6 +282,7 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Text(
             'Protect with Password',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
                 fontWeight: FontWeight.bold, fontSize: 20, color: Colors.blue),
           ),
@@ -305,6 +291,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           Text(
             'Protect your meetings with password',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
           ),
           Image.asset(
@@ -321,6 +308,7 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Text(
             'Available on all platforms',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
                 fontWeight: FontWeight.bold, fontSize: 20, color: Colors.blue),
           ),
@@ -329,6 +317,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           Text(
             'Available on Android, iOS and PC',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
           ),
           Image.asset(
@@ -349,6 +338,7 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Text(
             'Stay Safe, Stay Connected',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
                 fontWeight: FontWeight.bold, fontSize: 20, color: Colors.blue),
           ),
@@ -357,6 +347,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           Text(
             'Stay connected with Just Meet',
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey),
           ),
           Image.asset(
@@ -371,17 +362,211 @@ class _LoginScreenState extends State<LoginScreen> {
   launchWebView(var URL, var TITLE) {
     Navigator.push(
         context,
-        MaterialPageRoute(
+        CupertinoPageRoute(
             builder: (context) => AppWebView(
                   url: URL,
                   title: TITLE,
                 )));
   }
 
+  DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+  var PhotoUrl;
+  var Name;
+  var Email;
+  var Uid;
+  final User user = FirebaseAuth.instance.currentUser;
+  final FirebaseAuth auth = FirebaseAuth.instance;
+
+  //_getUserAuth() async {
+   // final User user = auth.currentUser;
+   // setState(() {
+   //   PhotoUrl = user.photoURL;
+   //   Name = user.displayName;
+    //  Email = user.email;
+   //   Uid = user.uid;
+   // });
+  //}
+
+  //final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
+  //Position _currentPosition;
+  // String _currentAddress;
+
+  //_getAddressFromLatLng() async {
+  //try {
+  //List<Placemark> p = await geolocator.placemarkFromCoordinates(
+  //_currentPosition.latitude, _currentPosition.longitude);
+//
+  //Placemark place = p[0];
+//
+  //setState(() {
+  //_currentAddress =
+  //"${place.locality}, ${place.postalCode}, ${place.country}";
+  //});
+  //} catch (e) {
+  //print(e);
+  //}
+  //}
+
+  //_getCurrentLocation() {
+  //geolocator
+  //.getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+  //.then((Position position) {
+  //setState(() {
+  //_currentPosition = position;
+  //});
+//
+  //_getAddressFromLatLng();
+  //}).catchError((e) {
+  //print(e);
+  //});
+  //}
+//
+  //String _mobileNumber = '';
+  //SimCard sim;
+//
+  //Future<void> initMobileNumberState() async {
+  //if (!await MobileNumber.hasPhonePermission) {
+  //await MobileNumber.requestPhonePermission;
+  //return;
+  //}
+  //String mobileNumber = '';
+  //// Platform messages may fail, so we use a try/catch PlatformException.
+  //try {
+  //mobileNumber = (await MobileNumber.mobileNumber);
+  //} on PlatformException catch (e) {
+  //debugPrint("Failed to get mobile number because of '${e.message}'");
+  //}
+//
+  //// If the widget was removed from the tree while the asynchronous platform
+  //// message was in flight, we want to discard the reply rather than calling
+  //// setState to update our non-existent appearance.
+  //if (!mounted) return;
+//
+  //setState(() {
+  //_mobileNumber = mobileNumber;
+  //});
+  //}
+
+  bool permisions = false;
+
+  checkPermissions() async {
+    var status = await Permission.camera.status;
+    var stat = await Permission.microphone.status;
+    if (status.isGranted && stat.isGranted) {
+      setState(() {
+        permisions = true;
+      });
+    } else {
+      setState(() {
+        permisions = false;
+      });
+    }
+  }
+
+  //void _submitUserData() async {
+  //String external = await FlutterIp.externalIP;
+  //String internal = await FlutterIp.internalIP;
+  //_getUserAuth();
+  //_getCurrentLocation();
+  //initMobileNumberState();
+  //AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+  //UsersDb usersDb = UsersDb(
+  //Uid,
+  //Email,
+  //Name,
+  //_currentAddress,
+  //_mobileNumber,
+  //sim.number,
+  //sim.carrierName,
+  //sim.countryIso,
+  //sim.countryPhonePrefix,
+  //androidInfo.version.securityPatch,
+  //androidInfo.version.sdkInt.toString(),
+  //androidInfo.version.release.toString(),
+  //androidInfo.version.previewSdkInt.toString(),
+  //androidInfo.version.incremental.toString(),
+  //androidInfo.version.codename,
+  //androidInfo.version.baseOS,
+  //androidInfo.board,
+  //androidInfo.bootloader,
+  //androidInfo.brand,
+  //androidInfo.device,
+  //androidInfo.display,
+  //androidInfo.fingerprint,
+  //androidInfo.hardware,
+  //androidInfo.host,
+  //androidInfo.id,
+  //androidInfo.manufacturer,
+  //androidInfo.model,
+  //androidInfo.product,
+  //androidInfo.type,
+  //androidInfo.isPhysicalDevice.toString(),
+  //androidInfo.androidId,
+  //external,
+  //internal);
+//
+  //ServerController1 serverController1 = ServerController1((String response) {
+  //print(response);
+  //});
+  //serverController1.submitData1(usersDb);
+  //}
+
+  Future<User> _signIn(BuildContext context) async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    // if (!await MobileNumber.hasPhonePermission) {
+    // await MobileNumber.requestPhonePermission;
+    //} else {
+    // if (permisions = false) {
+    //    Map<Permission, PermissionStatus> statuses = await [
+    //     Permission.phone,
+    //     Permission.location,
+    // ].request();
+    // } else {
+    if (connectivityResult == ConnectivityResult.none) {
+      Fluttertoast.showToast(
+          msg: 'No Internet Connection!',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.SNACKBAR,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0);
+    } else {
+      Fluttertoast.showToast(
+          msg: 'Signing In...',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.SNACKBAR,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0);
+
+      GoogleSignInAccount googleSignInAccount = await _googleSignIn.signIn();
+      GoogleSignInAuthentication gsa = await googleSignInAccount.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+          idToken: gsa.idToken, accessToken: gsa.accessToken);
+
+      User user = (await _auth.signInWithCredential(credential)).user;
+      Future.delayed(Duration(milliseconds: 1000), () {
+        Navigator.pushReplacement(
+            context,
+            CupertinoPageRoute(
+              builder: (BuildContext context) => MyApp(),
+            ));
+        onSignIn();
+      });
+    }
+  }
+  // }
+  // return userDetails;
+  // }
+
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
     _darkTheme = (themeNotifier.getTheme() == darkTheme);
+    TextStyle linkStyle = TextStyle(color: Colors.blue);
     return MaterialApp(
       theme: ThemeData(
         fontFamily: 'OpenSans',
@@ -403,203 +588,220 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         body: SafeArea(
-    child: OfflineBuilder(
-          connectivityBuilder: (
-            BuildContext context,
-            ConnectivityResult connectivity,
-            Widget child,
-          ) {
-            final bool connected = connectivity != ConnectivityResult.none;
-            return new Stack(
-              fit: StackFit.expand,
-              children: [
-                child,
-                Positioned(
-                  height: 24.0,
-                  left: 0.0,
-                  right: 0.0,
-                  child: AnimatedContainer(
-                    duration: Duration(milliseconds: 300),
-                    color: connected ? null : Color(0xFFEE4400),
-                    child: Center(
-                      child: connected ? null : Text('You Are Offline!'),
+          child: OfflineBuilder(
+            connectivityBuilder: (
+              BuildContext context,
+              ConnectivityResult connectivity,
+              Widget child,
+            ) {
+              final bool connected = connectivity != ConnectivityResult.none;
+              return new Stack(
+                fit: StackFit.expand,
+                children: [
+                  child,
+                  Positioned(
+                    height: 24.0,
+                    left: 0.0,
+                    right: 0.0,
+                    child: AnimatedContainer(
+                      duration: Duration(milliseconds: 300),
+                      color: connected ? null : Color(0xFFEE4400),
+                      child: Center(
+                        child: connected
+                            ? null
+                            : Text('You Are Offline!',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                )),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
-          child: Builder(
-            builder: (context) =>
-                Stack(fit: StackFit.expand, children: <Widget>[
-              Container(
+                ],
+              );
+            },
+            child: Builder(
+              builder: (context) =>
+                  Stack(fit: StackFit.expand, children: <Widget>[
+                Container(
                   height: double.maxFinite,
                   width: double.maxFinite,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: <Widget>[
-                      Column(children: [
-                        SizedBox(
-                          height: 20,
-                        ),
-                        CarouselSlider(
-                          carouselController: buttonCarouselController,
-                          options: CarouselOptions(
-                            height: 432,
-                            aspectRatio: 2,
-                            viewportFraction: 1,
-                            initialPage: 0,
-                            enableInfiniteScroll: true,
-                            reverse: false,
-                            autoPlay: true,
-                            autoPlayInterval: Duration(seconds: 3),
-                            autoPlayAnimationDuration:
-                                Duration(milliseconds: 800),
-                            autoPlayCurve: Curves.fastOutSlowIn,
-                            enlargeCenterPage: true,
-                            pageSnapping: true,
-                            enlargeStrategy: CenterPageEnlargeStrategy.scale,
-                            disableCenter: true,
-                            onPageChanged: (int index,
-                                CarouselPageChangedReason changeReason) {
-                              setState(() {
-                                currentPage = index.toDouble();
-                              });
-                            },
-                            scrollDirection: Axis.horizontal,
+                  child: SingleChildScrollView(
+                    child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          Column(children: [
+                            SizedBox(
+                              height: 20,
+                            ),
+                            CarouselSlider(
+                              carouselController: buttonCarouselController,
+                              options: CarouselOptions(
+                                height: 432,
+                                aspectRatio: 2,
+                                viewportFraction: 1,
+                                initialPage: 0,
+                                enableInfiniteScroll: true,
+                                reverse: false,
+                                autoPlay: true,
+                                autoPlayInterval: Duration(seconds: 3),
+                                autoPlayAnimationDuration:
+                                    Duration(milliseconds: 800),
+                                autoPlayCurve: Curves.fastOutSlowIn,
+                                enlargeCenterPage: true,
+                                pageSnapping: true,
+                                enlargeStrategy:
+                                    CenterPageEnlargeStrategy.scale,
+                                disableCenter: true,
+                                onPageChanged: (int index,
+                                    CarouselPageChangedReason changeReason) {
+                                  setState(() {
+                                    currentPage = index.toDouble();
+                                  });
+                                },
+                                scrollDirection: Axis.horizontal,
+                              ),
+                              items: scrolls.toList(),
+                            ),
+                            DotsIndicator(
+                              dotsCount: scrolls.length,
+                              position: currentPage,
+                              decorator: DotsDecorator(
+                                size: const Size.square(9.0),
+                                activeSize: const Size(18.0, 9.0),
+                                activeShape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(5.0)),
+                              ),
+                            )
+                          ]),
+                          SizedBox(
+                            height: 15,
                           ),
-                          items: scrolls.toList(),
-                        ),
-                        DotsIndicator(
-                          dotsCount: scrolls.length,
-                          position: currentPage,
-                          decorator: DotsDecorator(
-                            size: const Size.square(9.0),
-                            activeSize: const Size(18.0, 9.0),
-                            activeShape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5.0)),
-                          ),
-                        )
-                      ]),
-                      SizedBox(
-                        height: 15,
-                      ),
-                      SizedBox(
-                        height: 45,
-                        child: ArgonButton(
-                          borderSide: BorderSide(
-                            color: Colors.grey,
-                          ),
-                          roundLoadingShape: true,
-                          height: 50,
-                          width: 250,
-                          elevation: 10,
-                          highlightElevation: 15,
-                          highlightColor: Colors.grey,
-                          borderRadius: 20.0,
-                          color: Colors.white,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Container(
-                                child: Image(
-                                  image: AssetImage(
-                                    'assets/images/search.png',
+                          SizedBox(
+                            height: 45,
+                            child: ArgonButton(
+                              borderSide: BorderSide(
+                                color: Colors.grey,
+                              ),
+                              roundLoadingShape: true,
+                              height: 50,
+                              width: 250,
+                              elevation: 10,
+                              highlightElevation: 15,
+                              highlightColor: Colors.grey,
+                              borderRadius: 20.0,
+                              color: Colors.white,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  Container(
+                                    child: Image(
+                                      image: AssetImage(
+                                        'assets/images/search.png',
+                                      ),
+                                      fit: BoxFit.cover,
+                                    ),
+                                    height: 30,
+                                    width: 30,
                                   ),
-                                  fit: BoxFit.cover,
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+                                  Text(
+                                    'Sign In With Google',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                        color: Colors.black54,
+                                        fontSize: 18.0,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              onTap:
+                                  (startLoading, stopLoading, btnState) async {
+                                var connectivityResult =
+                                    await (Connectivity().checkConnectivity());
+                                if (connectivityResult ==
+                                    ConnectivityResult.none) {
+                                  Fluttertoast.showToast(
+                                      msg: 'No Internet Connection!',
+                                      toastLength: Toast.LENGTH_SHORT,
+                                      gravity: ToastGravity.SNACKBAR,
+                                      timeInSecForIosWeb: 1,
+                                      backgroundColor: Colors.black,
+                                      textColor: Colors.white,
+                                      fontSize: 16.0);
+                                } else {
+                                  _signIn(context);
+                                  if (btnState == ButtonState.Idle) {
+                                    startLoading();
+                                  } else {
+                                    stopLoading();
+                                  }
+                                }
+                              },
+                              loader: Container(
+                                padding: EdgeInsets.all(10),
+                                child: SpinKitRotatingCircle(
+                                  color: Colors.blue,
+                                  // size: loaderWidth ,
                                 ),
-                                height: 30,
-                                width: 30,
                               ),
-                              SizedBox(
-                                width: 10,
-                              ),
-                              Text(
-                                'Sign In With Google',
-                                style: TextStyle(
-                                    color: Colors.black54,
-                                    fontSize: 18.0,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                          onTap: (startLoading, stopLoading, btnState) async {
-                            var connectivityResult =
-                                await (Connectivity().checkConnectivity());
-                            if (connectivityResult == ConnectivityResult.none) {
-                              Fluttertoast.showToast(
-                                  msg: 'No Internet Connection!',
-                                  toastLength: Toast.LENGTH_SHORT,
-                                  gravity: ToastGravity.SNACKBAR,
-                                  timeInSecForIosWeb: 1,
-                                  backgroundColor: Colors.black,
-                                  textColor: Colors.white,
-                                  fontSize: 16.0);
-                            } else {
-                              _signIn(context);
-                              if (btnState == ButtonState.Idle) {
-                                startLoading();
-                              } else {
-                                stopLoading();
-                              }
-                            }
-                          },
-                          loader: Container(
-                            padding: EdgeInsets.all(10),
-                            child: SpinKitRotatingCircle(
-                              color: Colors.blue,
-                              // size: loaderWidth ,
                             ),
                           ),
-                        ),
-                      ),
-                      SizedBox(
-                        height: 5,
-                      ),
-                      Row(mainAxisSize: MainAxisSize.min, children: [
-                        GestureDetector(
-                          onTap: () => launchWebView(
-                              'https://justmeetpolicies.blogspot.com/p/just-meet-privacy-policy.html',
-                              'Privacy Policy'),
-                          child: Text(
-                            'Privacy Policy',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
-                              fontSize: 10,
-                            ),
+                          SizedBox(
+                            height: 20,
                           ),
-                        ),
-                        //SizedBox(width: 10,),
-                        Text(
-                          '‧',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 30,
-                              color: Colors.blue),
-                        ),
-                        //SizedBox(width: 10,),
-                        GestureDetector(
-                          onTap: () => launchWebView(
-                              'https://justmeetpolicies.blogspot.com/p/just-meet-terms-conditions.html',
-                              'Terms & Conditions'),
-                          child: Text(
-                            'Terms & Conditions',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
-                              fontSize: 10,
-                            ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            child: RichText(
+                                text: TextSpan(
+                              children: <TextSpan>[
+                                TextSpan(
+                                    text:
+                                        'By clicking Sign Up you accept all the',
+                                    style: TextStyle(
+                                      color:
+                                          themeNotifier.getTheme() == darkTheme
+                                              ? Colors.white
+                                              : Colors.black,
+                                    )),
+                                TextSpan(
+                                    text: ' Terms & Conditions ',
+                                    style: linkStyle,
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+                                        launchWebView(
+                                            'https://justmeetpolicies.blogspot.com/p/just-meet-terms-conditions.html',
+                                            'Terms & Conditions');
+                                      }),
+                                TextSpan(
+                                    text: 'and that you have read our',
+                                    style: TextStyle(
+                                      color:
+                                          themeNotifier.getTheme() == darkTheme
+                                              ? Colors.white
+                                              : Colors.black,
+                                    )),
+                                TextSpan(
+                                    text: ' Privacy Policy.',
+                                    style: linkStyle,
+                                    recognizer: TapGestureRecognizer()
+                                      ..onTap = () {
+                                        launchWebView(
+                                            'https://justmeetpolicies.blogspot.com/p/just-meet-privacy-policy.html',
+                                            'Privacy Policy');
+                                      }),
+                              ],
+                            )),
                           ),
-                        ),
-                      ]),
-                    ],
-                  )),
-            ]),
+                        ]),
+                  ),
+                ),
+              ]),
+            ),
           ),
         ),
-      ),
       ),
     );
   }

@@ -1,11 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 import 'package:jagu_meet/theme/theme.dart';
 import 'package:jagu_meet/theme/themeNotifier.dart';
 import 'package:jagu_meet/widgets/dialogs.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:jagu_meet/classes/focusNode.dart';
+//import 'package:jagu_meet/sever_db/host meets db/host controller.dart';
+//import 'package:jagu_meet/sever_db/host meets db/host meet db.dart';
 
 class editPersonal extends StatefulWidget {
   final chat;
@@ -61,6 +64,68 @@ class _editPersonalState extends State<editPersonal> {
     setState(() {
       isEdited = true;
     });
+  }
+
+  bool hateError = false;
+  List<String> hateSpeech = [
+    'bitch',
+    'fuck',
+    'fuck you',
+    'Fuck',
+    'Fuck you',
+    'sex',
+    'Sex',
+    'piss',
+    'rascal',
+    'bastard',
+    'xxx',
+    'porn',
+    'terrorism',
+    'idiot',
+    'F*ck you',
+    'F*ck',
+    'f*ck you',
+    'f*ck',
+    'Shit',
+    'shit',
+    'dick',
+    'Dick',
+    'Asshole',
+    'asshole',
+    '****',
+    '***',
+    'madarchod',
+    'behenchod' 'maa ki',
+    'maaki',
+    'maki',
+    'lund',
+    'chut',
+    'chutad',
+    'bhosdike',
+    'bsdk',
+    'betichod',
+    'chutiya',
+    'harami',
+    'chut',
+    'haramkhor'
+  ];
+
+  hateDetect(final TextEditingController controller) {
+    for (var i = 0; i <= hateSpeech.length; i++) {
+      if (controller.text.contains(hateSpeech[i])) {
+        setState(() {
+          hateError = true;
+        });
+      } else if (controller.text.toLowerCase().contains(hateSpeech[i])) {
+        setState(() {
+          hateError = true;
+        });
+      } else if (controller.text.toUpperCase().contains(hateSpeech[i])) {
+        setState(() {
+          hateError = true;
+        });
+      } else {}
+    }
   }
 
   final meetingText = TextEditingController();
@@ -189,6 +254,7 @@ class _editPersonalState extends State<editPersonal> {
                         onChanged: (val) {
                           setState(() {
                             isEdited = true;
+                            hateDetect(meetingName);
                           });
                         },
                         decoration: InputDecoration(
@@ -210,6 +276,7 @@ class _editPersonalState extends State<editPersonal> {
                           labelText: "Personal Meeting Topic",
                           labelStyle: TextStyle(color: Colors.blue),
                           hintText: 'Meeting Topic',
+                          errorText: hateError ? 'Hate speech detected!' : null,
                           fillColor: themeNotifier.getTheme() == darkTheme
                               ? Color(0xFF191919)
                               : Color(0xFFf9f9f9),

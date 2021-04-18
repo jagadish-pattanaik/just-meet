@@ -3,7 +3,7 @@ description: Video conferencing app developed by Jagadish Prasad Pattanaik 2020.
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 2.1.0+4003
+version: 3.0.1+4005
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -12,62 +12,55 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: ^1.0.0
-  jitsi_meet: ^2.0.0
-  firebase_auth: ^0.18.4+1
-  firebase_core: ^0.5.3
-  google_sign_in: ^4.5.5
-  #font_awesome_flutter: ^8.10.1
-  share: ^0.6.5+4
-  url_launcher: ^5.7.10
-  rate_my_app: ^0.7.2
-  shared_preferences: 0.5.12+4
-  firebase_dynamic_links: ^0.6.3
-  provider: ^4.3.2+3
+  jitsi_meet: ^4.0.0
+  firebase_auth: ^1.1.0
+  firebase_core: ^1.0.2
+  google_sign_in: ^5.0.2
+  share: ^2.0.1
+  url_launcher: ^6.0.3
+  rate_my_app: ^1.1.0+1
+  shared_preferences: ^2.0.5
+  firebase_dynamic_links: ^2.0.0
+  provider: ^5.0.0
   random_string: ^2.1.0
-  sqflite: ^1.3.2+1
-  path_provider: ^1.6.24
+  sqflite: ^2.0.0+3
+  path_provider: ^2.0.1
   path: ^1.7.0
-  fluttertoast: ^7.1.5
-  package_info: ^0.4.3
-  date_time_picker: ^1.1.0
-  carousel_slider: ^2.3.1
-  image_gallery_saver: ^1.6.6
-  quick_actions: ^0.4.0+10
-  cached_network_image: ^2.4.1
-  device_info: ^1.0.0
-  dots_indicator: ^1.2.0
+  fluttertoast: ^8.0.3
+  package_info: ^2.0.0
+  date_time_picker: ^2.0.0
+  carousel_slider: ^3.0.0
+  quick_actions: ^0.6.0
+  cached_network_image: ^3.0.0
+  device_info: ^2.0.0
+  dots_indicator: ^2.0.0
   argon_buttons_flutter: ^1.0.6
-  flutter_spinkit: ^4.1.2+1
-  connectivity: ^2.0.2
+  flutter_spinkit: ^5.0.0
+  connectivity: ^3.0.3
   badges: ^1.1.6
   overlay_support: ^1.0.5
-  webview_flutter: ^1.0.7
-  flutter_offline: ^0.3.0
-  in_app_review: ^1.0.4
-  in_app_update: ^1.1.14
-  pull_to_refresh: ^1.6.3
-  timeago: ^2.0.29
+  webview_flutter: ^2.0.2
+  flutter_offline: ^2.0.0
+  in_app_review: ^2.0.2
+  in_app_update: ^2.0.0
+  pull_to_refresh: ^1.6.5
+  timeago: ^3.0.2
+  #http: ^0.13.1
+  permission_handler: ^6.1.3
+  grouped_buttons: ^1.0.4
+  #geolocator: ^5.3.1
+  #flutter_ip: ^0.2.0
+  #mobile_number: ^1.0.4
+  flutter_svg: ^0.21.0+1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
 flutter:
+
   assets:
-    - assets/images/schedule.png
-    - assets//images/clock.png
-    - assets//images/chat.jpg
-    - assets/images/startjoin.jpg
-    - assets/images/stay.jpg
-    - assets/images/unlimited.jpg
-    - assets/images/secured.jpg
-    - assets/images/multiple.jpg
-    - assets/images/lowmode.jpg
-    - assets/images/youtube.jpg
-    - assets/images/waiting.jpg
-    - assets/images/password.jpg
-    - assets/images/search.png
+    - assets/images/
 
   uses-material-design: true
 
@@ -75,4 +68,11 @@ flutter:
     - family: OpenSans
       fonts:
         - asset: assets/fonts/OpenSans-Regular.ttf
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins/Poppins-Medium.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins/Poppins-Bold.ttf
+          weight: 700
 

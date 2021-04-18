@@ -23,7 +23,7 @@ class _generalSettingsState extends State<generalSettings> {
       'https://play.google.com/store/apps/details?id=com.jaguweb.jagu_meet';
 
   Future<void> checkVersion() async {
-    _updateInfo?.updateAvailable == true
+    _updateInfo?.updateAvailability == UpdateAvailability.updateAvailable
         ? InAppUpdate.performImmediateUpdate()
         : Fluttertoast.showToast(
             msg: 'Just Meet is up to date!',
@@ -58,7 +58,10 @@ class _generalSettingsState extends State<generalSettings> {
     prefs.setBool('darkMode', value);
     var darkModeOn = prefs.getBool('darkMode');
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-        statusBarColor: darkModeOn ? Colors.black : Colors.transparent));
+        statusBarColor: darkModeOn ? Colors.black : Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.black,
+      systemNavigationBarIconBrightness: Brightness.dark,));
     // setBgColor(themeNotifier);
   }
 
@@ -156,7 +159,8 @@ class _generalSettingsState extends State<generalSettings> {
                           fontSize: 16,
                         ),
                       ),
-                      subtitle: Text('Dark mode saves energy'),
+                      subtitle: Text(themeNotifier.getTheme() == darkTheme
+                          ? 'On': 'Off'),
                       dense: true,
                       contentPadding:
                           EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),

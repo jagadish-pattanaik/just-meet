@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_offline/flutter_offline.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -65,11 +66,34 @@ class WebViewState extends State<AppWebView> {
           centerTitle: true,
           leading: IconButton(
             icon: Icon(
-              Icons.arrow_back,
+              Icons.clear,
               color: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
+          actions: [
+            IconButton(
+              icon: Icon(
+                Icons.open_in_new_outlined,
+                color: Colors.white,
+              ),
+              onPressed: () async {
+                var url = widget.url;
+                if (await canLaunch(url)) {
+                await launch(url);
+                } else {
+                Fluttertoast.showToast(
+                msg: 'Failed...Please check your internet connection',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
+                }
+              }
+            ),
+          ],
           iconTheme: IconThemeData(color: Colors.white),
           backgroundColor: themeNotifier.getTheme() == darkTheme
               ? Color(0xFF242424)
@@ -96,7 +120,8 @@ class WebViewState extends State<AppWebView> {
                       duration: Duration(milliseconds: 300),
                       color: connected ? null : Color(0xFFEE4400),
                       child: Center(
-                        child: connected ? null : Text('You Are Offline!'),
+                        child: connected ? null : Text('You Are Offline!',
+                            style: TextStyle(color: Colors.white,)),
                       ),
                     ),
                   ),

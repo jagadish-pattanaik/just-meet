@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "460297325343",
+    "firebase_url": "https://jmeet-8e163.firebaseio.com",
+    "project_id": "jmeet-8e163",
+    "storage_bucket": "jmeet-8e163.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:460297325343:android:184e0b966cf029def6fe2a",
+        "android_client_info": {
+          "package_name": "com.jaguweb.jagu_meet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "460297325343-ce372fvv52b5du7paqtp0nqu8bfguno1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jaguweb.jagu_meet",
+            "certificate_hash": "3c18a8d31bd28d26a8be1a5c33e38c910092ac0a"
+          }
+        },
+        {
+          "client_id": "460297325343-pq19vhm1m48fad9hc5lvqtq9v4874eit.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAXZ1ktV8zXGtCYPRMDHxIlVz-JTrzCpWQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "460297325343-pq19vhm1m48fad9hc5lvqtq9v4874eit.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

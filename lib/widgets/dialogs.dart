@@ -28,29 +28,31 @@ class Dialogs{
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-          title: Text(Title),
-          content: Text(Body),
+          title: Text(Title,
+            overflow: TextOverflow.ellipsis,),
+          content: Text(Body,
+            overflow: TextOverflow.ellipsis,),
           actions: <Widget>[
-            RaisedButton(
+            FlatButton(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              elevation: 0,
               color: Colors.transparent,
               onPressed: () => Navigator.of(context).pop(DialogAction.yes),
               child: Text(Yes,
+                overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: themeNotifier.getTheme() == darkTheme ? Colors.blueAccent : Colors.blue,
               ),),
             ),
-            RaisedButton(
+            FlatButton(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
-              elevation: 0,
               color: Colors.transparent,
               onPressed: () => Navigator.of(context).pop(DialogAction.no),
               child: Text(No,
+                overflow: TextOverflow.ellipsis,
       style: TextStyle(
       color: themeNotifier.getTheme() == darkTheme ? Colors.blueAccent : Colors.blue,
       ),),

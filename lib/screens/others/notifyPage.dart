@@ -1,6 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_review/in_app_review.dart';
-import 'package:jagu_meet/screens/webview.dart';
+import 'package:jagu_meet/screens/others/webview.dart';
 import 'package:jagu_meet/theme/theme.dart';
 import 'package:jagu_meet/theme/themeNotifier.dart';
 import 'package:provider/provider.dart';
@@ -59,7 +60,7 @@ class _NotifyState extends State<Notify> {
   launchWebView(var URL, var TITLE) {
     Navigator.push(
         context,
-        MaterialPageRoute(
+        CupertinoPageRoute(
             builder: (context) => AppWebView(
                   url: URL,
                   title: TITLE,
@@ -142,9 +143,9 @@ class _NotifyState extends State<Notify> {
                                   child: ClipOval(
                                       child:
                                           Icon(Icons.notification_important))),
-                              title: Text('Breaking Changes'),
+                              title: Text('New Update!'),
                               subtitle: Text(
-                                  'New version 2.1.0! Make sure all participants have it.'),
+                                  'New version 3.0.0! Make sure all participants have it.'),
                               trailing: Icon(Icons.arrow_forward_ios),
                             ),
                           ),
@@ -209,31 +210,6 @@ class _NotifyState extends State<Notify> {
                           child: SafeArea(
                             child: ListTile(
                               onTap: () {
-                                launchurl(
-                                    'https://www.youtube.com/channel/UCgdd03ctC4odnUCNlPBSdUg');
-                              },
-                              leading: SizedBox.fromSize(
-                                  size: const Size(40, 40),
-                                  child: ClipOval(
-                                      child: Icon(Icons.ondemand_video))),
-                              title: Text('Just Meet Tutorials'),
-                              subtitle: Text(
-                                  'Watch YouTube video and learn how to use Just Meet!'),
-                              trailing: Icon(Icons.arrow_forward_ios),
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Card(
-                          color: themeNotifier.getTheme() == darkTheme
-                              ? Color(0xFF242424)
-                              : Colors.white,
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          child: SafeArea(
-                            child: ListTile(
-                              onTap: () {
                                 launchWebView(
                                     'https://knowaboutjagadish.blogspot.com/p/jagadish-prasad-pattanaik.html',
                                     'Developer');
@@ -241,7 +217,7 @@ class _NotifyState extends State<Notify> {
                               leading: SizedBox.fromSize(
                                   size: const Size(40, 40),
                                   child: ClipOval(
-                                      child: Icon(Icons.info_outline))),
+                                      child: Icon(Icons.code))),
                               title: Text('Know about the Developer'),
                               subtitle: Text(
                                   'Know about the person who developed Just Meet for you with love!'),
