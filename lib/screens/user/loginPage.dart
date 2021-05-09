@@ -1,6 +1,7 @@
 import 'package:device_info/device_info.dart';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -9,6 +10,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:jagu_meet/main.dart';
+import 'package:jagu_meet/screens/meetweb/meetWeb.dart';
 import 'package:jagu_meet/screens/others/webview.dart';
 //import 'package:jagu_meet/sever_db/users%20db/users_db.dart';
 //import 'package:jagu_meet/sever_db/users%20db/users_db_controller.dart';
@@ -16,7 +18,6 @@ import 'package:jagu_meet/theme/theme.dart';
 import 'package:jagu_meet/theme/themeNotifier.dart';
 //import 'package:mobile_number/mobile_number.dart';
 //import 'package:mobile_number/sim_card.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -42,21 +43,14 @@ class _LoginScreenState extends State<LoginScreen> {
   checkConnection() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.none) {
-      Fluttertoast.showToast(
-          msg: 'No Internet Connection!',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
+      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
     } else {}
   }
 
   @override
   void initState() {
     super.initState();
-    checkPermissions();
+    //checkPermissions();
     checkConnection();
     getBg();
   }
@@ -88,7 +82,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Color bgColor = Colors.white;
   Color textColor = Colors.black;
-  var _darkTheme;
   var darkModeOn = false;
   double currentPage = 0.0;
 
@@ -447,21 +440,21 @@ class _LoginScreenState extends State<LoginScreen> {
   //});
   //}
 
-  bool permisions = false;
+ // bool permisions = false;
 
-  checkPermissions() async {
-    var status = await Permission.camera.status;
-    var stat = await Permission.microphone.status;
-    if (status.isGranted && stat.isGranted) {
-      setState(() {
-        permisions = true;
-      });
-    } else {
-      setState(() {
-        permisions = false;
-      });
-    }
-  }
+  //checkPermissions() async {
+  //  var status = await Permission.camera.status;
+  //  var stat = await Permission.microphone.status;
+  //  if (status.isGranted && stat.isGranted) {
+   //   setState(() {
+   //     permisions = true;
+  //    });
+  //  } else {
+  //    setState(() {
+   //     permisions = false;
+ //     });
+  //  }
+//  }
 
   //void _submitUserData() async {
   //String external = await FlutterIp.externalIP;
@@ -532,14 +525,7 @@ class _LoginScreenState extends State<LoginScreen> {
           textColor: Colors.white,
           fontSize: 16.0);
     } else {
-      Fluttertoast.showToast(
-          msg: 'Signing In...',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
+      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('Signing in...',)));
 
       GoogleSignInAccount googleSignInAccount = await _googleSignIn.signIn();
       GoogleSignInAuthentication gsa = await googleSignInAccount.authentication;
@@ -549,10 +535,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
       User user = (await _auth.signInWithCredential(credential)).user;
       Future.delayed(Duration(milliseconds: 1000), () {
+        !kIsWeb ?
         Navigator.pushReplacement(
             context,
             CupertinoPageRoute(
               builder: (BuildContext context) => MyApp(),
+            )) : Navigator.pushReplacement(
+            context,
+            CupertinoPageRoute(
+              builder: (BuildContext context) => meetWeb(),
             ));
         onSignIn();
       });
@@ -565,7 +556,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     TextStyle linkStyle = TextStyle(color: Colors.blue);
     return MaterialApp(
       theme: ThemeData(
@@ -723,14 +713,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     await (Connectivity().checkConnectivity());
                                 if (connectivityResult ==
                                     ConnectivityResult.none) {
-                                  Fluttertoast.showToast(
-                                      msg: 'No Internet Connection!',
-                                      toastLength: Toast.LENGTH_SHORT,
-                                      gravity: ToastGravity.SNACKBAR,
-                                      timeInSecForIosWeb: 1,
-                                      backgroundColor: Colors.black,
-                                      textColor: Colors.white,
-                                      fontSize: 16.0);
+                                  ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
                                 } else {
                                   _signIn(context);
                                   if (btnState == ButtonState.Idle) {

@@ -1,8 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:jagu_meet/theme/theme.dart';
 import 'package:jagu_meet/theme/themeNotifier.dart';
@@ -10,20 +8,18 @@ import 'package:jagu_meet/widgets/dialogs.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'loginPage.dart';
+import 'others/fullImage.dart';
+import 'others/infoPage.dart';
 
 class profilePage extends StatefulWidget {
   final name;
   final email;
   final photoURL;
-  final linkName;
-  final pmeet;
   profilePage(
       {Key key,
       @required this.name,
       this.email,
-      this.photoURL,
-      this.linkName,
-      this.pmeet})
+      this.photoURL})
       : super(key: key);
 
   @override
@@ -31,7 +27,6 @@ class profilePage extends StatefulWidget {
 }
 
 class _profilePageState extends State<profilePage> {
-  var _darkTheme;
   String _userName;
   String _userEmail;
   var _userPhotoUrl;
@@ -59,7 +54,6 @@ class _profilePageState extends State<profilePage> {
   Widget build(BuildContext context) {
     final GoogleSignIn _gSignIn = GoogleSignIn();
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     setState(() {
       _userName = widget.name;
       _userEmail = widget.email;
@@ -71,7 +65,7 @@ class _profilePageState extends State<profilePage> {
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(
-              Icons.arrow_back,
+              Icons.arrow_back_ios_sharp,
               color: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(),
@@ -99,10 +93,16 @@ class _profilePageState extends State<profilePage> {
                     tileColor: themeNotifier.getTheme() == darkTheme
                         ? Color(0xFF191919)
                         : Color(0xFFf9f9f9),
-                    trailing: CachedNetworkImage(
+                    trailing: GestureDetector(
+                      onTap: () => Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                              builder: (context) =>
+                                  fullImage(url: _userPhotoUrl))),
+                      child: CachedNetworkImage(
                       imageUrl: _userPhotoUrl,
                       placeholder: (context, url) =>
-                          CircularProgressIndicator(),
+                          CupertinoActivityIndicator(animating: true, ),
                       errorWidget: (context, url, error) => Icon(Icons.person),
                       imageBuilder: (context, imageProvider) => Container(
                           width: 40,
@@ -113,6 +113,7 @@ class _profilePageState extends State<profilePage> {
                                 image: imageProvider,
                                 fit: BoxFit.scaleDown,
                               ))),
+                    ),
                     ),
                     title: Text(
                       'Profile Photo',
@@ -167,121 +168,20 @@ class _profilePageState extends State<profilePage> {
                     tileColor: themeNotifier.getTheme() == darkTheme
                         ? Color(0xFF191919)
                         : Color(0xFFf9f9f9),
-                    onLongPress: () => Clipboard.setData(
-                        new ClipboardData(text: widget.pmeet))
-                        .then((_) {
-                      Fluttertoast.showToast(
-                          msg: 'PMI copied to clipboard',
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.SNACKBAR,
-                          timeInSecForIosWeb: 1,
-                          backgroundColor: Colors.black,
-                          textColor: Colors.white,
-                          fontSize: 16.0);
-                    }),
-                    title: Text('Personal Meeting ID'),
-                    trailing: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(widget.pmeet),
-                          SizedBox(
-                            width: 5,
-                          ),
-                          GestureDetector(
-                            onTap: () => Clipboard.setData(
-                                    new ClipboardData(text: widget.pmeet))
-                                .then((_) {
-                              Fluttertoast.showToast(
-                                  msg: 'PMI copied to clipboard',
-                                  toastLength: Toast.LENGTH_SHORT,
-                                  gravity: ToastGravity.SNACKBAR,
-                                  timeInSecForIosWeb: 1,
-                                  backgroundColor: Colors.black,
-                                  textColor: Colors.white,
-                                  fontSize: 16.0);
-                            }),
-                            child: Icon(
-                              Icons.copy_outlined,
-                              size: 15,
-                            ),
-                          ),
-                        ]),
-                  ),
-                  Divider(
-                    height: 1,
-                    color: themeNotifier.getTheme() == darkTheme
-                        ? Color(0xFF303030)
-                        : Colors.black12,
-                    indent: 15,
-                    endIndent: 0,
-                  ),
-                  ListTile(
-                    tileColor: themeNotifier.getTheme() == darkTheme
-                        ? Color(0xFF191919)
-                        : Color(0xFFf9f9f9),
-                    title: Text('Personal Link Name'),
-                    onLongPress: () =>
-                        Clipboard.setData(new ClipboardData(text: widget.linkName))
-                            .then((_) {
-                          Fluttertoast.showToast(
-                              msg: 'Personal Link Name copied to clipboard',
-                              toastLength: Toast.LENGTH_SHORT,
-                              gravity: ToastGravity.SNACKBAR,
-                              timeInSecForIosWeb: 1,
-                              backgroundColor: Colors.black,
-                              textColor: Colors.white,
-                              fontSize: 16.0);
-                        }),
-                    trailing: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(widget.linkName),
-                          SizedBox(
-                            width: 5,
-                          ),
-                          GestureDetector(
-                            onTap: () => Clipboard.setData(
-                                    new ClipboardData(text: widget.linkName))
-                                .then((_) {
-                              Fluttertoast.showToast(
-                                  msg: 'Personal Link Name copied to clipboard',
-                                  toastLength: Toast.LENGTH_SHORT,
-                                  gravity: ToastGravity.SNACKBAR,
-                                  timeInSecForIosWeb: 1,
-                                  backgroundColor: Colors.black,
-                                  textColor: Colors.white,
-                                  fontSize: 16.0);
-                            }),
-                            child: Icon(
-                              Icons.copy_outlined,
-                              size: 15,
-                            ),
-                          ),
-                        ]),
-                  ),
-                  Divider(
-                    height: 1,
-                    color: themeNotifier.getTheme() == darkTheme
-                        ? Color(0xFF303030)
-                        : Colors.black12,
-                  ),
-                  SizedBox(
-                    height: 25,
-                  ),
-                  Divider(
-                    height: 1,
-                    color: themeNotifier.getTheme() == darkTheme
-                        ? Color(0xFF303030)
-                        : Colors.black12,
-                  ),
-                  ListTile(
-                    tileColor: themeNotifier.getTheme() == darkTheme
-                        ? Color(0xFF191919)
-                        : Color(0xFFf9f9f9),
                     title: Text('Plan'),
-                    trailing: Text('Free'),
+                    subtitle: Text('Free'),
+                    onTap: () =>  Navigator.push(
+                        context,
+                        CupertinoPageRoute(
+                            builder: (context) => Information(
+                              text: 'Completely free and unlimited plan. Neither ads are shown nor your user data is sold for profit. Your love and support is our greatest motivation.',
+                              title: 'Plan',
+                            ))),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      size: 20,
+                      color: Colors.grey,
+                    ),
                   ),
                   Divider(
                     height: 1,
@@ -296,7 +196,19 @@ class _profilePageState extends State<profilePage> {
                         ? Color(0xFF191919)
                         : Color(0xFFf9f9f9),
                     title: Text('License'),
-                    trailing: Text('Unlimited Time and Participants'),
+                    subtitle: Text('Unlimited Time and Participants'),
+                    onTap: () =>  Navigator.push(
+                        context,
+                        CupertinoPageRoute(
+                            builder: (context) => Information(
+                              text: "You have been given unlimited meeting time and participants number without compromising quality and security. Your meetings are encrypted even Just Meet can't see them. So enjoy your unlimited free meetings.",
+                              title: 'License',
+                            ))),
+                    trailing: Icon(
+                      Icons.arrow_forward_ios,
+                      size: 20,
+                      color: Colors.grey,
+                    ),
                   ),
                   Divider(
                     height: 1,
@@ -332,14 +244,7 @@ class _profilePageState extends State<profilePage> {
                               builder: (BuildContext context) => LoginScreen()),
                           (Route<dynamic> route) => false,
                         );
-                        Fluttertoast.showToast(
-                            msg: 'Signed Out',
-                            toastLength: Toast.LENGTH_SHORT,
-                            gravity: ToastGravity.SNACKBAR,
-                            timeInSecForIosWeb: 1,
-                            backgroundColor: Colors.black,
-                            textColor: Colors.white,
-                            fontSize: 16.0);
+                        ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('Signed Out',)));
                       }
                       if (action == DialogAction.abort) {}
                     },
