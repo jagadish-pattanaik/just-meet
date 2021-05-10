@@ -28,7 +28,6 @@ import 'package:intl/intl.dart';
 import 'package:flutter/foundation.dart';
 
 class viewScheduled extends StatefulWidget {
-  final personalId;
   final num;
   final name;
   final email;
@@ -37,7 +36,6 @@ class viewScheduled extends StatefulWidget {
   List items;
   viewScheduled(
       {Key key,
-      @required this.personalId,
       @required this.num,
       @required this.items,
       this.name,
@@ -52,8 +50,6 @@ class viewScheduled extends StatefulWidget {
 
 class _viewScheduledState extends State<viewScheduled> {
   DatabaseHelper2 db2 = new DatabaseHelper2();
-  var _darkTheme;
-  var personalId;
   var name;
   var useAvatar;
   var copyEnabled;
@@ -67,7 +63,7 @@ class _viewScheduledState extends State<viewScheduled> {
 
   var webLink = 'meet.jit.si/';
 
-  List<Note2> items2 = new List();
+  List<Note2> items2 = [];
 
   String version = '.';
 
@@ -107,14 +103,7 @@ class _viewScheduledState extends State<viewScheduled> {
     if (await canLaunch(url)) {
       await launch(url);
     } else {
-      Fluttertoast.showToast(
-          msg: 'Failed...Please check your internet connection',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
+      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
     }
   }
 
@@ -177,7 +166,6 @@ class _viewScheduledState extends State<viewScheduled> {
 
   void meetFeedback() {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     rateMyApp.showStarRateDialog(
       context,
       title: 'How was your meeting?',
@@ -199,7 +187,7 @@ class _viewScheduledState extends State<viewScheduled> {
               'Submit',
               style: TextStyle(
                 color: themeNotifier.getTheme() == darkTheme
-                    ? Colors.blueAccent
+                    ? Color(0xff0184dc)
                     : Colors.blue,
               ),
             ),
@@ -227,14 +215,6 @@ class _viewScheduledState extends State<viewScheduled> {
                           '\n'
                           'What Went Wrong: ');
                 } else if (stars <= 5) {
-                  Fluttertoast.showToast(
-                      msg: 'Thank You for your feedback',
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.SNACKBAR,
-                      timeInSecForIosWeb: 1,
-                      backgroundColor: Colors.black,
-                      textColor: Colors.white,
-                      fontSize: 16.0);
                 }
               } else {
                 Navigator.pop(context);
@@ -247,7 +227,7 @@ class _viewScheduledState extends State<viewScheduled> {
               'Not Now',
               style: TextStyle(
                 color: themeNotifier.getTheme() == darkTheme
-                    ? Colors.blueAccent
+                    ? Color(0xff0184dc)
                     : Colors.blue,
               ),
             ),
@@ -269,7 +249,6 @@ class _viewScheduledState extends State<viewScheduled> {
 
   getInfo() {
     setState(() {
-      personalId = widget.personalId;
       name = widget.name;
     });
   }
@@ -290,7 +269,6 @@ class _viewScheduledState extends State<viewScheduled> {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     getList();
     var time = DateFormat.jm()
         .format(DateFormat("hh:mm").parse(items2[widget.num].from2));
@@ -323,7 +301,7 @@ class _viewScheduledState extends State<viewScheduled> {
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(
-              Icons.arrow_back,
+              Icons.arrow_back_ios_sharp,
               color: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(),
@@ -356,16 +334,12 @@ class _viewScheduledState extends State<viewScheduled> {
           onPressed: () => _navigateToNote(context, items2[widget.num]),
           label: Text('Edit',
               style: TextStyle(
-                  color: themeNotifier.getTheme() == darkTheme
-                      ? Colors.blueAccent
-                      : Colors.white,
+                  color: Colors.white,
                   fontWeight: FontWeight.bold)),
           icon: Icon(Icons.edit,
-              color: themeNotifier.getTheme() == darkTheme
-                  ? Colors.blueAccent
-                  : Colors.white),
+              color: Colors.white),
           backgroundColor: themeNotifier.getTheme() == darkTheme
-              ? Color(0xFF242424)
+              ? Color(0xff0184dc)
               : Colors.blue,
         ),
         body: SafeArea(
@@ -382,7 +356,7 @@ class _viewScheduledState extends State<viewScheduled> {
                           ? Color(0xFF191919)
                           : Color(0xFFf9f9f9),
                       title: Text('Meeting Id'),
-                      trailing: Text(items2[widget.num].title2),
+                      trailing: Text(items2[widget.num].description2),
                     ),
                     Divider(
                       height: 1,
@@ -397,7 +371,7 @@ class _viewScheduledState extends State<viewScheduled> {
                           ? Color(0xFF191919)
                           : Color(0xFFf9f9f9),
                       title: Text('Meeting Topic'),
-                      trailing: Text(items2[widget.num].description2),
+                      trailing: Text(items2[widget.num].title2),
                     ),
                     Divider(
                       height: 1,
@@ -469,11 +443,11 @@ class _viewScheduledState extends State<viewScheduled> {
                       height: 20,
                     ),
                     SizedBox(
-                      height: 45.0,
+                      height: 50.0,
                       width: MediaQuery.of(context).size.width * 0.90,
                       child: RaisedButton(
                           color: themeNotifier.getTheme() == darkTheme
-                              ? Colors.blueAccent
+                              ? Color(0xff0184dc)
                               : Colors.blue,
                           disabledColor: themeNotifier.getTheme() == darkTheme
                               ? Color(0xFF242424)
@@ -492,14 +466,7 @@ class _viewScheduledState extends State<viewScheduled> {
                             var connectivityResult =
                                 await (Connectivity().checkConnectivity());
                             if (connectivityResult == ConnectivityResult.none) {
-                              Fluttertoast.showToast(
-                                  msg: 'No Internet Connection!',
-                                  toastLength: Toast.LENGTH_SHORT,
-                                  gravity: ToastGravity.SNACKBAR,
-                                  timeInSecForIosWeb: 1,
-                                  backgroundColor: Colors.black,
-                                  textColor: Colors.white,
-                                  fontSize: 16.0);
+                              ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
                             } else {
                               var dynamicLink = await createDynamicLink(
                                 meet: items2[widget.num].description2.replaceAll(
@@ -558,7 +525,7 @@ class _viewScheduledState extends State<viewScheduled> {
                       height: 15,
                     ),
                     SizedBox(
-                      height: 45.0,
+                      height: 50.0,
                       width: MediaQuery.of(context).size.width * 0.90,
                       child: RaisedButton(
                           color: themeNotifier.getTheme() == darkTheme
@@ -633,32 +600,6 @@ class _viewScheduledState extends State<viewScheduled> {
                     SizedBox(
                       height: 15,
                     ),
-                    // SizedBox(
-                    //   height: 45.0,
-                    //   width: double.maxFinite,
-                    //   child:
-                    //   RaisedButton(
-                    //       color: Colors.red,
-                    //       disabledColor: themeNotifier.getTheme() == darkTheme? Color(0xFF242424) : Colors.grey,
-                    //       elevation: 5,
-                    //       disabledElevation: 0,
-                    //       disabledTextColor: themeNotifier.getTheme() == darkTheme? Colors.grey : Colors.white,
-                    //       textColor: Colors.white,
-                    //       shape: RoundedRectangleBorder(
-                    //         borderRadius: BorderRadius.circular(15.0),
-                    //       ),
-                    //       onPressed: () {
-                    //         _deleteNote2(
-                    //             context, items2[widget.num],
-                    //             widget.num);
-                    //         Navigator.pop(context);
-                    //       },
-                    //       child: Text('Delete',
-                    //         style: TextStyle(
-                    //             fontSize: 18,
-                    //             fontWeight: FontWeight.bold),)
-                    //   ),
-                    // ),
                   ]),
             ),
           ),
@@ -724,14 +665,7 @@ class _viewScheduledState extends State<viewScheduled> {
       debugPrint("JitsiMeetingOptions: $options");
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult == ConnectivityResult.none) {
-        Fluttertoast.showToast(
-            msg: 'No Internet Connection!',
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.SNACKBAR,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.black,
-            textColor: Colors.white,
-            fontSize: 16.0);
+        ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
       } else {
         await JitsiMeet.joinMeeting(
           options,
@@ -803,6 +737,14 @@ class _viewScheduledState extends State<viewScheduled> {
             meetFeedback();
             debugPrint("${options.room} terminated with message: $message");
           }, onPictureInPictureWillEnter: (message) {
+            Fluttertoast.showToast(
+                msg: 'To return to meeting, open Just Meet',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
             debugPrint(
                 "${options.room} entered PIP mode with message: $message");
           }, onPictureInPictureTerminated: (message) {
@@ -965,6 +907,14 @@ class _viewScheduledState extends State<viewScheduled> {
             meetFeedback();
             debugPrint("${options.room} terminated with message: $message");
           }, onPictureInPictureWillEnter: (message) {
+            Fluttertoast.showToast(
+                msg: 'To return to meeting, open Just Meet',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
             debugPrint(
                 "${options.room} entered PIP mode with message: $message");
           }, onPictureInPictureTerminated: (message) {
@@ -993,14 +943,7 @@ class _viewScheduledState extends State<viewScheduled> {
 
   copyInvite(inviteText) {
     Clipboard.setData(new ClipboardData(text: inviteText)).then((_) {
-      Fluttertoast.showToast(
-          msg: 'Copied Invite link to clipboard',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
+      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('Copied invite link to clipboard',)));
     });
   }
 
@@ -1046,14 +989,7 @@ class _viewScheduledState extends State<viewScheduled> {
       String url, String date, String from, String to) async {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.none) {
-      Fluttertoast.showToast(
-          msg: 'No Internet Connection!',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
+      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
     } else {
       final textshare =
           "$name is inviting you to join a scheduled Just Meet meeting.  "
@@ -1105,7 +1041,7 @@ class _viewScheduledState extends State<viewScheduled> {
   void _navigateToNote(BuildContext context, Note2 note2) async {
     String result = await Navigator.push(
       context,
-      CupertinoPageRoute(builder: (context) => NoteScreen(note2, personalId)),
+      CupertinoPageRoute(builder: (context) => NoteScreen(note2)),
     );
 
     if (result == 'update') {

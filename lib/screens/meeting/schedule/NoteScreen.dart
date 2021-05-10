@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:jagu_meet/model/note.dart';
+import 'package:jagu_meet/widgets/cupertinoSwitchListTile.dart';
 import 'package:jagu_meet/widgets/dialogs.dart';
 import '../../utils/databasehelper_scheduled.dart';
 import 'package:date_time_picker/date_time_picker.dart';
@@ -13,8 +14,7 @@ import 'package:jagu_meet/classes/focusNode.dart';
 
 class NoteScreen extends StatefulWidget {
   final Note2 note2;
-  final personalId;
-  NoteScreen(this.note2, this.personalId);
+  NoteScreen(this.note2);
 
   @override
   State<StatefulWidget> createState() => new _NoteScreenState();
@@ -29,17 +29,12 @@ class _NoteScreenState extends State<NoteScreen> {
   TextEditingController _fromController;
   TextEditingController _toController;
 
-  var _darkTheme;
-
   var chatEnabled;
   var liveEnabled;
   var recordEnabled;
   var raiseEnabled;
   var shareYtEnabled;
   var kickOutEnabled;
-
-  var useId = false;
-  var personalId;
 
   var repeat;
 
@@ -60,24 +55,57 @@ class _NoteScreenState extends State<NoteScreen> {
     raiseEnabled = widget.note2.raiseEnabled2;
     shareYtEnabled = widget.note2.shareYtEnabled2;
     kickOutEnabled = widget.note2.kickOutEnabled2;
-    personalId = widget.personalId;
     isEmpty();
   }
 
-  bool _desError = false;
-  bool _titleError = false;
   bool _dateError = false;
   bool _fromError = false;
   bool _toError = false;
 
   bool hateError = false;
-  List<String> hateSpeech = ['bitch', 'fuck', 'fuck you', 'Fuck', 'Fuck you', 'sex', 'Sex', 'piss', 'rascal', 'bastard',
-    'xxx', 'porn', 'terrorism', 'idiot', 'F*ck you', 'F*ck', 'f*ck you', 'f*ck', 'Shit', 'shit', 'dick', 'Dick',
-    'Asshole', 'asshole', '****', '***', 'madarchod', 'behenchod' 'maa ki', 'maaki', 'maki', 'lund', 'chut', 'chutad',
-    'bhosdike', 'bsdk', 'betichod', 'chutiya', 'harami', 'chut', 'haramkhor'];
+  List<String> hateSpeech = [
+    'Bitch',
+    'Fuck',
+    'Anal',
+    'Fuck',
+    'sex',
+    'Vaginal',
+    'Piss',
+    'Rascal',
+    'Bastard',
+    'Xxx',
+    'Porn',
+    'Terrorism',
+    'Idiot',
+    'F*ck',
+    'Vagina',
+    'F**k',
+    'Shit',
+    'fucker',
+    'Chudai',
+    'Dick',
+    'Asshole',
+    'asshole',
+    '****',
+    '***',
+    'Madarchod',
+    'Behenchod',
+    'Maa ki',
+    'Maaki',
+    'Maki',
+    'Lund',
+    'Chut',
+    'Chutad',
+    'Bhosdike',
+    'Bsdk',
+    'Betichod',
+    'Chutiya',
+    'Harami',
+    'chut',
+    'Haramkhor'];
 
   hateDetect(final TextEditingController controller) {
-    for (var i = 0; i <= hateSpeech.length; i++) {
+    for (var i = 0; i < hateSpeech.length; i++) {
       if (controller.text.contains(hateSpeech[i])) {
         setState(() {
           hateError = true;
@@ -90,23 +118,27 @@ class _NoteScreenState extends State<NoteScreen> {
         setState(() {
           hateError = true;
         });
-      } else {}
+      } else if (controller.text.isEmpty) {
+        setState(() {
+          hateError = false;
+        });
+      }else if (!controller.text.contains(hateSpeech[i])) {
+        setState(() {
+          hateError = false;
+        });
+      } else if (!controller.text.toLowerCase().contains(hateSpeech[i])) {
+        setState(() {
+          hateError = false;
+        });
+      } else if (!controller.text.toUpperCase().contains(hateSpeech[i])) {
+        setState(() {
+          hateError = false;
+        });
+      }
     }
   }
 
   void check() {
-    setState(() {
-      _descriptionController.text.length >= 10
-          ? _desError = false
-          : _desError = true;
-    });
-
-    setState(() {
-      _titleController.text.isNotEmpty
-          ? _titleError = false
-          : _titleError = true;
-    });
-
     setState(() {
       _dateController.text.isNotEmpty ? _dateError = false : _dateError = true;
     });
@@ -140,20 +172,19 @@ class _NoteScreenState extends State<NoteScreen> {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     return MaterialApp(
       theme: themeNotifier.getTheme(),
       home: Scaffold(
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(
-              Icons.arrow_back,
+              Icons.arrow_back_ios_sharp,
               color: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
           iconTheme: IconThemeData(color: Colors.white),
-          backgroundColor: themeNotifier.getTheme() == darkTheme
+          backgroundColor:themeNotifier.getTheme() == darkTheme
               ? Color(0xFF242424)
               : Colors.blue,
           elevation: 5,
@@ -204,14 +235,7 @@ class _NoteScreenState extends State<NoteScreen> {
                                       .then((_) {
                                     Navigator.pop(context, 'update');
                                   });
-                                  Fluttertoast.showToast(
-                                      msg: 'Schedule Updated',
-                                      toastLength: Toast.LENGTH_SHORT,
-                                      gravity: ToastGravity.SNACKBAR,
-                                      timeInSecForIosWeb: 1,
-                                      backgroundColor: Colors.black,
-                                      textColor: Colors.white,
-                                      fontSize: 16.0);
+                                  ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('Schedule updated',)));
                                 }
                               }
                             }
@@ -273,87 +297,54 @@ class _NoteScreenState extends State<NoteScreen> {
                   SizedBox(
                     height: 10,
                   ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10,
-                    ),
-                    child: TextField(
-                      style: TextStyle(color: Colors.grey),
+              Divider(
+                height: 1,
+                color: themeNotifier.getTheme() == darkTheme
+                    ? Color(0xFF303030)
+                    : Colors.black12,
+              ),
+              TextField(
                       controller: _descriptionController,
                       enableInteractiveSelection: false,
                       focusNode: AlwaysDisabledFocusNode(),
+                      textAlign: TextAlign.center,
                       decoration: InputDecoration(
-                        focusedBorder: OutlineInputBorder(
-                          borderSide:
-                              const BorderSide(color: Colors.blue, width: 1.0),
-                          borderRadius: BorderRadius.circular(15.0),
-                        ),
                         counterText: '',
                         isDense: true,
                         filled: true,
                         contentPadding: const EdgeInsets.only(
                             top: 12.0, bottom: 12, left: 10),
-                        errorText: _desError ? 'Invalid Meeting Id' : null,
-                        border: OutlineInputBorder(
-                          borderRadius: const BorderRadius.all(
-                            const Radius.circular(10.0),
-                          ),
-                        ),
-                        floatingLabelBehavior: FloatingLabelBehavior.always,
-                        labelText: "Meeting Id",
-                        labelStyle: TextStyle(color: Colors.blue),
-                        hintText: 'Meeting Id',
+                        border: InputBorder.none,
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
                         fillColor: themeNotifier.getTheme() == darkTheme
                             ? Color(0xFF191919)
                             : Color(0xFFf9f9f9),
                       ),
                     ),
+                  Divider(
+                    height: 1,
+                    color: themeNotifier.getTheme() == darkTheme
+                        ? Color(0xFF303030)
+                        : Colors.black12,
                   ),
-                  Visibility(
-                    visible: (widget.note2.id2 != null) ? false : true,
-                    child: ListTile(
-                      title: Text(
-                        "Use Personal Meeting ID",
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                      dense: true,
-                      subtitle: Text(personalId),
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                          value: useId,
-                          onChanged: onIdChanged,
-                        ),
-                      ),
-                    ),
+                  SizedBox(
+                    height: 10,
                   ),
-                  Visibility(
-                    visible: (widget.note2.id2 != null) ? true : false,
-                    child: SizedBox(
-                      height: 10,
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10,
-                    ),
-                    child: TextField(
+              Divider(
+                height: 1,
+                color: themeNotifier.getTheme() == darkTheme
+                    ? Color(0xFF303030)
+                    : Colors.black12,
+              ),
+              TextField(
                       controller: _titleController,
                       autofocus: false,
                       onChanged: (val) {
-                        isEmpty();
                         hateDetect(_titleController);
+                        isEmpty();
                       },
+                textAlign: TextAlign.center,
                       decoration: InputDecoration(
-                        focusedBorder: OutlineInputBorder(
-                          borderSide:
-                              const BorderSide(color: Colors.blue, width: 1.0),
-                          borderRadius: BorderRadius.circular(15.0),
-                        ),
                         counterText: '',
                         isDense: true,
                         filled: true,
@@ -361,35 +352,37 @@ class _NoteScreenState extends State<NoteScreen> {
                             top: 12.0, bottom: 12, left: 10),
                         errorText:
                             hateError ? 'Hate speech detected!' : null,
-                        border: OutlineInputBorder(
-                          borderRadius: const BorderRadius.all(
-                            const Radius.circular(10.0),
-                          ),
-                        ),
-                        floatingLabelBehavior: FloatingLabelBehavior.always,
-                        labelText: "Meeting Topic",
-                        labelStyle: TextStyle(color: Colors.blue),
+                        border: InputBorder.none,
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
                         hintText: 'Meeting Topic',
                         fillColor: themeNotifier.getTheme() == darkTheme
                             ? Color(0xFF191919)
                             : Color(0xFFf9f9f9),
                       ),
                     ),
+                  Divider(
+                    height: 1,
+                    color: themeNotifier.getTheme() == darkTheme
+                        ? Color(0xFF303030)
+                        : Colors.black12,
                   ),
                   SizedBox(
                     height: 10,
                   ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10,
-                    ),
-                    child: DateTimePicker(
+              Divider(
+                height: 1,
+                color: themeNotifier.getTheme() == darkTheme
+                    ? Color(0xFF303030)
+                    : Colors.black12,
+              ),
+              DateTimePicker(
                       controller: _dateController,
                       type: DateTimePickerType.date,
                       initialDatePickerMode: DatePickerMode.day,
                       firstDate: DateTime.now(),
                       lastDate: DateTime(2022),
                       calendarTitle: 'Meeting Date',
+                textAlign: TextAlign.center,
                       onChanged: (value) {
                         isEmpty();
                         setState(() {
@@ -402,34 +395,32 @@ class _NoteScreenState extends State<NoteScreen> {
                         });
                       },
                       decoration: InputDecoration(
-                        focusedBorder: OutlineInputBorder(
-                          borderSide:
-                              const BorderSide(color: Colors.blue, width: 2.0),
-                          borderRadius: BorderRadius.circular(15.0),
-                        ),
                         isDense: true,
                         filled: true,
                         contentPadding: const EdgeInsets.only(
                             top: 12.0, bottom: 12, left: 10),
                         errorText:
                             _dateError ? 'Meeting Date is mandatory' : null,
-                        border: OutlineInputBorder(
-                          borderRadius: const BorderRadius.all(
-                            const Radius.circular(10.0),
-                          ),
-                        ),
-                        floatingLabelBehavior: FloatingLabelBehavior.always,
-                        labelText: 'Meeting Date',
-                        labelStyle: TextStyle(color: Colors.blue),
-                        hintText: 'Meeting Date',
+                        border: InputBorder.none,
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
                         fillColor: themeNotifier.getTheme() == darkTheme
                             ? Color(0xFF191919)
                             : Color(0xFFf9f9f9),
                       ),
                     ),
+                  Divider(
+                    height: 1,
+                    color: themeNotifier.getTheme() == darkTheme
+                        ? Color(0xFF303030)
+                        : Colors.black12,
                   ),
                   SizedBox(
-                    height: 5,
+                    height: 10,
+                  ),Divider(
+                    height: 1,
+                    color: themeNotifier.getTheme() == darkTheme
+                        ? Color(0xFF303030)
+                        : Colors.black12,
                   ),
                   ListTile(
                     title: Text(
@@ -438,46 +429,27 @@ class _NoteScreenState extends State<NoteScreen> {
                         fontSize: 16,
                       ),
                     ),
+                    tileColor: themeNotifier.getTheme() == darkTheme
+                        ? Color(0xFF191919)
+                        : Color(0xFFf9f9f9),
+                    onTap: () => showActionSheet(),
+                    subtitle: Text(repeat, overflow: TextOverflow.ellipsis,),
                     dense: true,
                     contentPadding:
                         EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                    trailing: PopupMenuButton<String>(
-                      onSelected: (String value) {
-                        setState(() {
-                          repeat = value;
-                        });
-                      },
-                      itemBuilder: (BuildContext context) =>
-                          <PopupMenuEntry<String>>[
-                        const PopupMenuItem<String>(
-                          value: 'Never',
-                          child: Text('Never'),
-                        ),
-                        const PopupMenuItem<String>(
-                          value: 'Daily',
-                          child: Text('Every Day'),
-                        ),
-                        const PopupMenuItem<String>(
-                          value: 'Weekly',
-                          child: Text('Every Week'),
-                        ),
-                        const PopupMenuItem<String>(
-                          value: 'Monthly',
-                          child: Text('Every Month'),
-                        ),
-                        const PopupMenuItem<String>(
-                          value: 'Yearly',
-                          child: Text('Every Year'),
-                        ),
-                      ],
-                      child: Row(mainAxisSize: MainAxisSize.min, children: [
-                        Text(repeat),
-                        Icon(
-                          Icons.arrow_forward_ios,
+                    trailing: IconButton(
+                      icon: Icon(
+                          Icons.keyboard_arrow_down,
                           size: 20,
-                        )
-                      ]),
-                    ),
+                        ),
+                      onPressed: () => showActionSheet(),
+                  ),
+                  ),
+                  Divider(
+                    height: 1,
+                    color: themeNotifier.getTheme() == darkTheme
+                        ? Color(0xFF303030)
+                        : Colors.black12,
                   ),
                   SizedBox(
                     height: 5,
@@ -507,6 +479,7 @@ class _NoteScreenState extends State<NoteScreen> {
                               controller: _fromController,
                               type: DateTimePickerType.time,
                               calendarTitle: 'From',
+                              textAlign: TextAlign.center,
                               dateMask: 'hh:mm a',
                               use24HourFormat: false,
                               onChanged: (value) {
@@ -521,11 +494,6 @@ class _NoteScreenState extends State<NoteScreen> {
                                 });
                               },
                               decoration: InputDecoration(
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                      color: Colors.blue, width: 2.0),
-                                  borderRadius: BorderRadius.circular(15.0),
-                                ),
                                 isDense: true,
                                 filled: true,
                                 contentPadding: const EdgeInsets.only(
@@ -534,14 +502,15 @@ class _NoteScreenState extends State<NoteScreen> {
                                     ? 'Meeting Time is mandatory'
                                     : null,
                                 border: OutlineInputBorder(
-                                  borderRadius: const BorderRadius.all(
-                                    const Radius.circular(10.0),
-                                  ),
+                                  borderSide: BorderSide(
+                                      color: themeNotifier.getTheme() == darkTheme
+                                          ? Color(0xFF303030)
+                                          : Colors.black12,
+                                      width: 1.0),
+                                  borderRadius: BorderRadius.circular(0),
                                 ),
                                 floatingLabelBehavior:
-                                    FloatingLabelBehavior.always,
-                                labelText: 'From',
-                                labelStyle: TextStyle(color: Colors.blue),
+                                    FloatingLabelBehavior.never,
                                 hintText: 'From',
                                 fillColor: themeNotifier.getTheme() == darkTheme
                                     ? Color(0xFF191919)
@@ -559,6 +528,7 @@ class _NoteScreenState extends State<NoteScreen> {
                               type: DateTimePickerType.time,
                               calendarTitle: 'To',
                               dateMask: 'hh:mm a',
+                              textAlign: TextAlign.center,
                               use24HourFormat: false,
                               onChanged: (value) {
                                 isEmpty();
@@ -572,11 +542,6 @@ class _NoteScreenState extends State<NoteScreen> {
                                 });
                               },
                               decoration: InputDecoration(
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                      color: Colors.blue, width: 2.0),
-                                  borderRadius: BorderRadius.circular(15.0),
-                                ),
                                 isDense: true,
                                 filled: true,
                                 contentPadding: const EdgeInsets.only(
@@ -585,14 +550,15 @@ class _NoteScreenState extends State<NoteScreen> {
                                     ? 'Meeting Time is mandatory'
                                     : null,
                                 border: OutlineInputBorder(
-                                  borderRadius: const BorderRadius.all(
-                                    const Radius.circular(10.0),
-                                  ),
+                                  borderSide: BorderSide(
+                                      color: themeNotifier.getTheme() == darkTheme
+                                          ? Color(0xFF303030)
+                                          : Colors.black12,
+                                      width: 1.0),
+                                  borderRadius: BorderRadius.circular(0),
                                 ),
                                 floatingLabelBehavior:
-                                    FloatingLabelBehavior.always,
-                                labelText: 'To',
-                                labelStyle: TextStyle(color: Colors.blue),
+                                    FloatingLabelBehavior.never,
                                 hintText: 'To',
                                 fillColor: themeNotifier.getTheme() == darkTheme
                                     ? Color(0xFF191919)
@@ -621,10 +587,7 @@ class _NoteScreenState extends State<NoteScreen> {
                         ? Color(0xFF303030)
                         : Colors.black12,
                   ),
-                  ListTile(
-                    tileColor: themeNotifier.getTheme() == darkTheme
-                        ? Color(0xFF191919)
-                        : Color(0xFFf9f9f9),
+                  CupertinoSwitchListTile(
                     title: Text(
                       "Chat",
                       style: TextStyle(
@@ -632,16 +595,9 @@ class _NoteScreenState extends State<NoteScreen> {
                       ),
                     ),
                     dense: true,
-                    subtitle: Text('Allow participants to chat in meeting'),
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                    trailing: Transform.scale(
-                      scale: 0.8,
-                      child: CupertinoSwitch(
-                        value: chatEnabled == 0 ? false : true,
-                        onChanged: onChatChanged,
-                      ),
-                    ),
+                    subtitle: Text('Allow participants to chat in meeting', overflow: TextOverflow.ellipsis,),
+                    value: chatEnabled == 0 ? false : true,
+                    onChanged: onChatChanged,
                   ),
                   Divider(
                     height: 1,
@@ -651,10 +607,7 @@ class _NoteScreenState extends State<NoteScreen> {
                     indent: 15,
                     endIndent: 0,
                   ),
-                  ListTile(
-                    tileColor: themeNotifier.getTheme() == darkTheme
-                        ? Color(0xFF191919)
-                        : Color(0xFFf9f9f9),
+                  CupertinoSwitchListTile(
                     title: Text(
                       "Raise Hand",
                       style: TextStyle(
@@ -662,16 +615,9 @@ class _NoteScreenState extends State<NoteScreen> {
                       ),
                     ),
                     dense: true,
-                    subtitle: Text('Allow participants to raise hand'),
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                    trailing: Transform.scale(
-                      scale: 0.8,
-                      child: CupertinoSwitch(
-                        value: raiseEnabled == 0 ? false : true,
-                        onChanged: onRaiseChanged,
-                      ),
-                    ),
+                    subtitle: Text('Allow participants to raise hand', overflow: TextOverflow.ellipsis,),
+                    value: raiseEnabled == 0 ? false : true,
+                    onChanged: onRaiseChanged,
                   ),
                   Divider(
                     height: 1,
@@ -681,10 +627,7 @@ class _NoteScreenState extends State<NoteScreen> {
                     indent: 15,
                     endIndent: 0,
                   ),
-                  ListTile(
-                    tileColor: themeNotifier.getTheme() == darkTheme
-                        ? Color(0xFF191919)
-                        : Color(0xFFf9f9f9),
+                  CupertinoSwitchListTile(
                     title: Text(
                       "Share YouTube Video",
                       style: TextStyle(
@@ -692,17 +635,10 @@ class _NoteScreenState extends State<NoteScreen> {
                       ),
                     ),
                     subtitle: Text(
-                        'Allow participants to share YouTube video in meeting'),
+                        'Allow participants to share YouTube video in meeting', overflow: TextOverflow.ellipsis,),
                     dense: true,
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                    trailing: Transform.scale(
-                      scale: 0.8,
-                      child: CupertinoSwitch(
-                        value: shareYtEnabled == 0 ? false : true,
-                        onChanged: onYtChanged,
-                      ),
-                    ),
+                    value: shareYtEnabled == 0 ? false : true,
+                    onChanged: onYtChanged,
                   ),
                   Divider(
                     height: 1,
@@ -712,10 +648,7 @@ class _NoteScreenState extends State<NoteScreen> {
                     indent: 15,
                     endIndent: 0,
                   ),
-                  ListTile(
-                    tileColor: themeNotifier.getTheme() == darkTheme
-                        ? Color(0xFF191919)
-                        : Color(0xFFf9f9f9),
+                  CupertinoSwitchListTile(
                     title: Text(
                       "Record Meeting",
                       style: TextStyle(
@@ -723,16 +656,9 @@ class _NoteScreenState extends State<NoteScreen> {
                       ),
                     ),
                     dense: true,
-                    subtitle: Text('Allow Participants to record meeting'),
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                    trailing: Transform.scale(
-                      scale: 0.8,
-                      child: CupertinoSwitch(
-                        value: recordEnabled == 0 ? false : true,
-                        onChanged: onRecordChanged,
-                      ),
-                    ),
+                    subtitle: Text('Allow Participants to record meeting', overflow: TextOverflow.ellipsis,),
+                    value: recordEnabled == 0 ? false : true,
+                    onChanged: onRecordChanged,
                   ),
                   Divider(
                     height: 1,
@@ -742,27 +668,17 @@ class _NoteScreenState extends State<NoteScreen> {
                     indent: 15,
                     endIndent: 0,
                   ),
-                  ListTile(
-                    tileColor: themeNotifier.getTheme() == darkTheme
-                        ? Color(0xFF191919)
-                        : Color(0xFFf9f9f9),
+                  CupertinoSwitchListTile(
                     title: Text(
                       "Live streaming",
                       style: TextStyle(
                         fontSize: 16,
                       ),
                     ),
-                    subtitle: Text('Allow participants to live stream meeting'),
+                    subtitle: Text('Allow participants to live stream meeting', overflow: TextOverflow.ellipsis,),
                     dense: true,
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                    trailing: Transform.scale(
-                      scale: 0.8,
-                      child: CupertinoSwitch(
-                        value: liveEnabled == 0 ? false : true,
-                        onChanged: onLiveChanged,
-                      ),
-                    ),
+                    value: liveEnabled == 0 ? false : true,
+                    onChanged: onLiveChanged,
                   ),
                   Divider(
                     height: 1,
@@ -772,10 +688,7 @@ class _NoteScreenState extends State<NoteScreen> {
                     indent: 15,
                     endIndent: 0,
                   ),
-                  ListTile(
-                    tileColor: themeNotifier.getTheme() == darkTheme
-                        ? Color(0xFF191919)
-                        : Color(0xFFf9f9f9),
+                  CupertinoSwitchListTile(
                     title: Text(
                       "Kick Out",
                       style: TextStyle(
@@ -783,17 +696,10 @@ class _NoteScreenState extends State<NoteScreen> {
                       ),
                     ),
                     subtitle: Text(
-                        'Allow participants to kick ou each other in meeting'),
+                        'Allow participants to kick ou each other in meeting', overflow: TextOverflow.ellipsis,),
                     dense: true,
-                    contentPadding:
-                        EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                    trailing: Transform.scale(
-                      scale: 0.8,
-                      child: CupertinoSwitch(
-                        value: kickOutEnabled == 0 ? false : true,
-                        onChanged: onKickChanged,
-                      ),
-                    ),
+                    value: kickOutEnabled == 0 ? false : true,
+                    onChanged: onKickChanged,
                   ),
                   Divider(
                     height: 1,
@@ -804,105 +710,6 @@ class _NoteScreenState extends State<NoteScreen> {
                   SizedBox(
                     height: 10,
                   ),
-                  //     SizedBox(
-                  //       height: 50.0,
-                  //       width: double.maxFinite,
-                  //       child:
-                  //         RaisedButton(
-                  //           color: Colors.blue,
-                  //           disabledColor: themeNotifier.getTheme() == darkTheme? Color(0xFF242424) : Colors.grey,
-                  //           elevation: 5,
-                  //           disabledElevation: 0,
-                  //           disabledTextColor: themeNotifier.getTheme() == darkTheme? Colors.grey : Colors.white,
-                  //           textColor: Colors.white,
-                  //           shape: RoundedRectangleBorder(
-                  //               borderRadius: BorderRadius.circular(18.0),
-                  //           ),
-                  //           child: (widget.note2.id2 != null) ? Text('Update', style: TextStyle(fontSize: 18,
-                  //               fontWeight: FontWeight.bold),) : Text('Schedule', style: TextStyle(fontSize: 18,
-                  //               fontWeight: FontWeight.bold),),
-                  //           onPressed: isButtonEnabled? () {
-                  //             check();
-                  //             if (widget.note2.id2 != null) {
-                  //               if (_descriptionController.text.length >= 10) {
-                  //                 if (_titleController.text.isNotEmpty) {
-                  //                   if (_dateController.text.isNotEmpty) {
-                  //                     if (_fromController.text.isNotEmpty) {
-                  //                       if (_toController.text.isNotEmpty) {
-                  //                         db2.updateNote2(Note2.fromMap({
-                  //                           'id2': widget.note2.id2,
-                  //                           'title2': _titleController.text,
-                  //                           'description2': _descriptionController.text,
-                  //                           'date2': _dateController.text,
-                  //                           'from2': _fromController.text,
-                  //                           'to2': _toController.text,
-                  //                           'repeat': repeat,
-                  //                           'chatEnabled2': chatEnabled,
-                  //                           'liveEnabled2': liveEnabled,
-                  //                           'recordEnabled2': recordEnabled,
-                  //                           'raiseEnabled2': raiseEnabled,
-                  //                           'shareYtEnabled': shareYtEnabled,
-                  //                           'kickOutEnabled': kickOutEnabled
-                  //                         })).then((_) {
-                  //                           Navigator.pop(context, 'update');
-                  //                         });
-                  //                         Fluttertoast.showToast(
-                  //                             msg: 'Schedule Updated',
-                  //                             toastLength: Toast.LENGTH_SHORT,
-                  //                             gravity: ToastGravity.SNACKBAR,
-                  //                             timeInSecForIosWeb: 1,
-                  //                             backgroundColor: Colors.black,
-                  //                             textColor: Colors.white,
-                  //                             fontSize: 16.0
-                  //                         );
-                  //                       }
-                  //                     }
-                  //                   }
-                  //                 }
-                  //               }
-                  //             }else {
-                  //               check();
-                  //               if (_descriptionController.text.length >= 10) {
-                  //                 if (_titleController.text.isNotEmpty) {
-                  //                   if (_dateController.text.isNotEmpty) {
-                  //                     if (_fromController.text.isNotEmpty) {
-                  //                       if (_toController.text.isNotEmpty) {
-                  //                         db2.saveNote2(Note2(
-                  //                         _titleController.text,
-                  //                         _descriptionController.text,
-                  //                         _dateController.text,
-                  //                         _fromController.text,
-                  //                         _toController.text,
-                  //                         repeat,
-                  //                         chatEnabled,
-                  //                         liveEnabled,
-                  //                         recordEnabled,
-                  //                         raiseEnabled,
-                  //                             shareYtEnabled,
-                  //                             kickOutEnabled,)).then((_) {
-                  //                         Navigator.pop(context, 'save');
-                  //                         });
-                  //                         Fluttertoast.showToast(
-                  //                             msg: 'Meeting Scheduled',
-                  //                             toastLength: Toast.LENGTH_SHORT,
-                  //                             gravity: ToastGravity.SNACKBAR,
-                  //                             timeInSecForIosWeb: 1,
-                  //                             backgroundColor: Colors.black,
-                  //                             textColor: Colors.white,
-                  //                             fontSize: 16.0
-                  //                         );
-                  //                       }
-                  //                     }
-                  //                   }
-                  //                 }
-                  //               }
-                  //             }
-                  // } : null,
-                  //         ),
-                  //     ),
-                  //         SizedBox(
-                  //           height: 20,
-                  //         )
                 ],
               ),
             ),
@@ -912,15 +719,98 @@ class _NoteScreenState extends State<NoteScreen> {
     );
   }
 
-  onIdChanged(bool value) {
-    setState(() {
-      useId = value;
-      if (useId == true) {
-        _descriptionController.text = personalId;
-      } else {
-        _descriptionController.text = widget.note2.description2;
-      }
-    });
+  showActionSheet() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+          actions: <Widget>[
+      Container(
+      color:themeNotifier.getTheme() == darkTheme
+          ? Color(0xFF242424)
+          : Colors.white,
+        child: CupertinoActionSheetAction(
+              child: Text('Daily',
+                style: TextStyle(color: themeNotifier.getTheme() == darkTheme
+                    ? Colors.white
+                    : Colors.blue,),),
+              isDefaultAction: true,
+              onPressed: () {
+                setState(() {
+                  repeat = 'Daily';
+                });
+                Navigator.pop(context);
+              },
+            ),
+      ),
+    Container(
+    color:themeNotifier.getTheme() == darkTheme
+    ? Color(0xFF242424)
+        : Colors.white,
+    child: CupertinoActionSheetAction(
+              child: Text('Weekly',
+                style: TextStyle(color: themeNotifier.getTheme() == darkTheme
+                    ? Colors.white
+                    : Colors.blue,),),
+              isDefaultAction: true,
+              onPressed: () {
+                setState(() {
+                  repeat = 'Weekly';
+                });
+                Navigator.pop(context);
+              },
+            ),
+    ),
+    Container(
+    color:themeNotifier.getTheme() == darkTheme
+    ? Color(0xFF242424)
+        : Colors.white,
+    child: CupertinoActionSheetAction(
+              child: Text('Monthly',
+                style: TextStyle(color: themeNotifier.getTheme() == darkTheme
+                    ? Colors.white
+                    : Colors.blue,),),
+              isDefaultAction: true,
+              onPressed: () {
+                setState(() {
+                  repeat = 'Monthly';
+                });
+                Navigator.pop(context);
+              },
+            ),
+    ),
+    Container(
+    color:themeNotifier.getTheme() == darkTheme
+    ? Color(0xFF242424)
+        : Colors.white,
+    child: CupertinoActionSheetAction(
+              child: Text('Never',
+                style: TextStyle(color: themeNotifier.getTheme() == darkTheme
+                    ? Colors.white
+                    : Colors.blue,),),
+              isDefaultAction: true,
+              onPressed: () {
+                setState(() {
+                  repeat = 'Never';
+                });
+                Navigator.pop(context);
+              },
+            )
+    ),
+          ],
+          cancelButton: Container(
+              color:themeNotifier.getTheme() == darkTheme
+                  ? Color(0xFF242424)
+                  : Colors.white,
+              child: CupertinoActionSheetAction(
+            child: const Text('Cancel'),
+            isDestructiveAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          )),
+      ),
+    );
   }
 
   onChatChanged(bool value) {

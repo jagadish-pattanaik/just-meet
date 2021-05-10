@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:jagu_meet/theme/theme.dart';
 import 'package:jagu_meet/theme/themeNotifier.dart';
+import 'package:jagu_meet/widgets/cupertinoSwitchListTile.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,8 +12,6 @@ class advancedSettings extends StatefulWidget {
 }
 
 class _advancedSettingsState extends State<advancedSettings> {
-  var _darkTheme;
-
   var copyEnabled = true;
   var skinTone = true;
   var nonVideoUsers = true;
@@ -49,14 +48,13 @@ class _advancedSettingsState extends State<advancedSettings> {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     return MaterialApp(
       theme: themeNotifier.getTheme(),
       home: Scaffold(
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(
-              Icons.arrow_back,
+              Icons.arrow_back_ios_sharp,
               color: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(),
@@ -80,10 +78,7 @@ class _advancedSettingsState extends State<advancedSettings> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    ListTile(
-                      tileColor: themeNotifier.getTheme() == darkTheme
-                          ? Color(0xFF191919)
-                          : Color(0xFFf9f9f9),
+                    CupertinoSwitchListTile(
                       title: Text(
                         "Show meeting topic",
                         style: TextStyle(
@@ -93,15 +88,8 @@ class _advancedSettingsState extends State<advancedSettings> {
                       dense: true,
                       subtitle:
                           Text('Show meeting topic at the top in meeting'),
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                          value: meetNameEnabled,
-                          onChanged: onMeetNameChanged,
-                        ),
-                      ),
+                      value: meetNameEnabled,
+                      onChanged: onMeetNameChanged,
                     ),
                     Divider(
                       height: 1,
@@ -111,10 +99,7 @@ class _advancedSettingsState extends State<advancedSettings> {
                       indent: 15,
                       endIndent: 0,
                     ),
-                    ListTile(
-                      tileColor: themeNotifier.getTheme() == darkTheme
-                          ? Color(0xFF191919)
-                          : Color(0xFFf9f9f9),
+                    CupertinoSwitchListTile(
                       title: Text(
                         "Show meeting time",
                         style: TextStyle(
@@ -122,16 +107,9 @@ class _advancedSettingsState extends State<advancedSettings> {
                         ),
                       ),
                       dense: true,
-                      subtitle: Text('Show meeting time at the top in meeting'),
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                          value: timerEnabled,
-                          onChanged: ontimerChanged,
-                        ),
-                      ),
+                      subtitle: Text('Show meeting time at the top in meeting', overflow: TextOverflow.ellipsis,),
+                      value: timerEnabled,
+                      onChanged: ontimerChanged,
                     ),
                     Divider(
                       height: 1,
@@ -141,10 +119,7 @@ class _advancedSettingsState extends State<advancedSettings> {
                       indent: 15,
                       endIndent: 0,
                     ),
-                    ListTile(
-                      tileColor: themeNotifier.getTheme() == darkTheme
-                          ? Color(0xFF191919)
-                          : Color(0xFFf9f9f9),
+                    CupertinoSwitchListTile(
                       title: Text(
                         "Auto-Copy Invite Link",
                         style: TextStyle(
@@ -153,16 +128,9 @@ class _advancedSettingsState extends State<advancedSettings> {
                       ),
                       dense: true,
                       subtitle: Text(
-                          'Automatically copy invite link once meeting starts'),
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                          value: copyEnabled,
-                          onChanged: onCopyChanged,
-                        ),
-                      ),
+                          'Automatically copy invite link once meeting starts', overflow: TextOverflow.ellipsis,),
+                      value: copyEnabled,
+                      onChanged: onCopyChanged,
                     ),
                     Divider(
                       height: 1,
@@ -172,10 +140,7 @@ class _advancedSettingsState extends State<advancedSettings> {
                       indent: 15,
                       endIndent: 0,
                     ),
-                    ListTile(
-                      tileColor: themeNotifier.getTheme() == darkTheme
-                          ? Color(0xFF191919)
-                          : Color(0xFFf9f9f9),
+                    CupertinoSwitchListTile(
                       title: Text(
                         "Enhance My Voice",
                         style: TextStyle(
@@ -183,16 +148,9 @@ class _advancedSettingsState extends State<advancedSettings> {
                         ),
                       ),
                       dense: true,
-                      subtitle: Text('Enhance my original voice in meeting'),
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                          value: enhanceSound,
-                          onChanged: onSoundChanged,
-                        ),
-                      ),
+                      subtitle: Text('Enhance my original voice in meeting', overflow: TextOverflow.ellipsis,),
+                      value: enhanceSound,
+                      onChanged: onSoundChanged,
                     ),
                     Divider(
                       height: 1,
@@ -202,10 +160,7 @@ class _advancedSettingsState extends State<advancedSettings> {
                       indent: 15,
                       endIndent: 0,
                     ),
-                    ListTile(
-                      tileColor: themeNotifier.getTheme() == darkTheme
-                          ? Color(0xFF191919)
-                          : Color(0xFFf9f9f9),
+                    CupertinoSwitchListTile(
                       title: Text(
                         "Enhance My Skin Tone",
                         style: TextStyle(
@@ -215,15 +170,8 @@ class _advancedSettingsState extends State<advancedSettings> {
                       dense: true,
                       subtitle:
                           Text('Enhance my original skin tone in meeting'),
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                          value: skinTone,
-                          onChanged: onSkinChanges,
-                        ),
-                      ),
+                      value: skinTone,
+                      onChanged: onSkinChanges,
                     ),
                     Divider(
                       height: 1,
@@ -233,10 +181,7 @@ class _advancedSettingsState extends State<advancedSettings> {
                       indent: 15,
                       endIndent: 0,
                     ),
-                    ListTile(
-                      tileColor: themeNotifier.getTheme() == darkTheme
-                          ? Color(0xFF191919)
-                          : Color(0xFFf9f9f9),
+                    CupertinoSwitchListTile(
                       title: Text(
                         "Enhance Lighting",
                         style: TextStyle(
@@ -246,15 +191,8 @@ class _advancedSettingsState extends State<advancedSettings> {
                       dense: true,
                       subtitle:
                           Text('Enhance my background lighting in meeting'),
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                          value: enhanceLight,
-                          onChanged: onEnhanceLight,
-                        ),
-                      ),
+                      value: enhanceLight,
+                      onChanged: onEnhanceLight,
                     ),
                     Divider(
                       height: 1,
@@ -264,10 +202,7 @@ class _advancedSettingsState extends State<advancedSettings> {
                       indent: 15,
                       endIndent: 0,
                     ),
-                    ListTile(
-                      tileColor: themeNotifier.getTheme() == darkTheme
-                          ? Color(0xFF191919)
-                          : Color(0xFFf9f9f9),
+                    CupertinoSwitchListTile(
                       title: Text(
                         "Mirror My Video",
                         style: TextStyle(
@@ -275,16 +210,9 @@ class _advancedSettingsState extends State<advancedSettings> {
                         ),
                       ),
                       dense: true,
-                      subtitle: Text('Mirror my video when using front camera'),
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                          value: mirrorVideo,
-                          onChanged: onMirrorVideoChanged,
-                        ),
-                      ),
+                      subtitle: Text('Mirror my video when using front camera', overflow: TextOverflow.ellipsis,),
+                      value: mirrorVideo,
+                      onChanged: onMirrorVideoChanged,
                     ),
                     Divider(
                       height: 1,
@@ -294,10 +222,7 @@ class _advancedSettingsState extends State<advancedSettings> {
                       indent: 15,
                       endIndent: 0,
                     ),
-                    ListTile(
-                      tileColor: themeNotifier.getTheme() == darkTheme
-                          ? Color(0xFF191919)
-                          : Color(0xFFf9f9f9),
+                    CupertinoSwitchListTile(
                       title: Text(
                         "Show Non-Video Participants",
                         style: TextStyle(
@@ -306,16 +231,9 @@ class _advancedSettingsState extends State<advancedSettings> {
                       ),
                       dense: true,
                       subtitle: Text(
-                          'Show avatar of non-video participants in Tile-View'),
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                          value: nonVideoUsers,
-                          onChanged: onNonVideoChanged,
-                        ),
-                      ),
+                          'Show avatar of non-video participants in Tile-View', overflow: TextOverflow.ellipsis,),
+                      value: nonVideoUsers,
+                      onChanged: onNonVideoChanged,
                     ),
                     Divider(
                       height: 1,
@@ -326,6 +244,7 @@ class _advancedSettingsState extends State<advancedSettings> {
                       endIndent: 0,
                     ),
                     ListTile(
+                        onTap: () => showActionSheet(),
                       tileColor: themeNotifier.getTheme() == darkTheme
                           ? Color(0xFF191919)
                           : Color(0xFFf9f9f9),
@@ -336,50 +255,18 @@ class _advancedSettingsState extends State<advancedSettings> {
                         ),
                       ),
                       dense: true,
-                      subtitle: Text('Video quality in meeting'),
+                      subtitle: Text(quality, overflow: TextOverflow.ellipsis,),
                       contentPadding:
                           EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (String value) {
-                          setState(() {
-                            quality = value;
-                          });
-                          SharedPreferences.getInstance().then((prefs) {
-                            prefs.setString('quality', value);
-                          });
-                        },
-                        itemBuilder: (BuildContext context) =>
-                            <PopupMenuEntry<String>>[
-                          const PopupMenuItem<String>(
-                            value: '1080p',
-                            child: Text('1080p'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: '720p',
-                            child: Text('720p'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: '480p',
-                            child: Text('480p'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: '360p',
-                            child: Text('360p'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'Auto',
-                            child: Text('Auto'),
-                          ),
-                        ],
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          Text(quality),
-                          Icon(
-                            Icons.arrow_forward_ios,
+                      trailing:
+                          IconButton(
+                            icon: Icon(Icons.keyboard_arrow_down,
                             size: 20,
+                            color: Colors.grey,
+                            ),
+                            onPressed: () => showActionSheet(),
                           )
-                        ]),
                       ),
-                    ),
                     Divider(
                       height: 1,
                       color: themeNotifier.getTheme() == darkTheme
@@ -391,6 +278,112 @@ class _advancedSettingsState extends State<advancedSettings> {
           ),
         ),
       ),
+    );
+  }
+
+  showActionSheet() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+          actions: <Widget>[
+      Container(
+      color:themeNotifier.getTheme() == darkTheme
+          ? Color(0xFF242424)
+          : Colors.white,
+        child: CupertinoActionSheetAction(
+              child: Text('1080p',
+                style: TextStyle(color: themeNotifier.getTheme() == darkTheme
+                    ? Colors.white
+                    : Colors.blue,),),
+              isDefaultAction: true,
+              onPressed: () {
+                setState(() {
+                  quality = '1080p';
+                });
+                SharedPreferences.getInstance().then((prefs) {
+                  prefs.setString('quality', quality);
+                });
+                Navigator.pop(context, '1080p');
+              },
+            ),
+      ),
+    Container(
+    color:themeNotifier.getTheme() == darkTheme
+    ? Color(0xFF242424)
+        : Colors.white,
+    child: CupertinoActionSheetAction(
+              child: Text('720p',
+                style: TextStyle(color: themeNotifier.getTheme() == darkTheme
+                    ? Colors.white
+                    : Colors.blue,),),
+              isDefaultAction: true,
+              onPressed: () {
+                setState(() {
+                  quality = '720p';
+                });
+                SharedPreferences.getInstance().then((prefs) {
+                  prefs.setString('quality', quality);
+                });
+                Navigator.pop(context, '720p');
+              },
+            ),
+    ),
+    Container(
+    color:themeNotifier.getTheme() == darkTheme
+    ? Color(0xFF242424)
+        : Colors.white,
+    child: CupertinoActionSheetAction(
+              child: Text('480p',
+                style: TextStyle(color: themeNotifier.getTheme() == darkTheme
+                    ? Colors.white
+                    : Colors.blue,),),
+              isDefaultAction: true,
+              onPressed: () {
+                setState(() {
+                  quality = '480p';
+                });
+                SharedPreferences.getInstance().then((prefs) {
+                  prefs.setString('quality', quality);
+                });
+                Navigator.pop(context, '480p');
+              },
+            ),
+    ),
+    Container(
+    color:themeNotifier.getTheme() == darkTheme
+    ? Color(0xFF242424)
+        : Colors.white,
+    child: CupertinoActionSheetAction(
+              child: Text('Auto',
+                style: TextStyle(color: themeNotifier.getTheme() == darkTheme
+                    ? Colors.white
+                    : Colors.blue,),),
+              isDefaultAction: true,
+              onPressed: () {
+                setState(() {
+                  quality = 'Auto';
+                });
+                SharedPreferences.getInstance().then((prefs) {
+                  prefs.setString('quality', quality);
+                });
+                Navigator.pop(context, 'Auto');
+              },
+            )
+    ),
+          ],
+          cancelButton: Container(
+              color:themeNotifier.getTheme() == darkTheme
+                  ? Color(0xFF242424)
+                  : Colors.white,
+              child: CupertinoActionSheetAction(
+            child: const Text('Cancel'),
+            isDestructiveAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+            },
+              ),
+          )),
     );
   }
 

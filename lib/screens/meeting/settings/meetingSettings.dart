@@ -1,54 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:jagu_meet/screens/settings/globalLiveSettings.dart';
+import 'package:jagu_meet/screens/settings/randomSettings.dart';
 import 'package:jagu_meet/theme/theme.dart';
 import 'package:jagu_meet/theme/themeNotifier.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'hostingSettings.dart';
+import 'joiningSettings.dart';
 
-class joinSettings extends StatefulWidget {
+class meetingSettings extends StatefulWidget {
   @override
-  _joinSettingsState createState() => _joinSettingsState();
+  _meetingSettingsState createState() => _meetingSettingsState();
 }
 
-class _joinSettingsState extends State<joinSettings> {
-  var _darkTheme;
-
-  var isAudioOnly = true;
-  var isAudioMuted = true;
-  var isVideoMuted = true;
-  var useAvatar = true;
-  var lowMode = true;
-
-  getSettings() async {
-    await SharedPreferences.getInstance().then((prefs) {
-      setState(() {
-        useAvatar = prefs.getBool('useAvatar') ?? true;
-        lowMode = prefs.getBool('lowMode') ?? true;
-        isAudioOnly = prefs.getBool('isAudioOnly') ?? true;
-        isAudioMuted = prefs.getBool('isAudioMuted') ?? true;
-        isVideoMuted = prefs.getBool('isVideoMuted') ?? true;
-      });
-    });
-    Future.delayed(Duration(milliseconds: 500), () {});
-  }
-
+class _meetingSettingsState extends State<meetingSettings> {
   @override
   void initState() {
     super.initState();
-    getSettings();
   }
 
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     return MaterialApp(
       theme: themeNotifier.getTheme(),
       home: Scaffold(
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(
-              Icons.arrow_back,
+              Icons.arrow_back_ios_sharp,
               color: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(),
@@ -59,7 +39,7 @@ class _joinSettingsState extends State<joinSettings> {
               : Colors.blue,
           elevation: 5,
           title: Text(
-            'Joining Settings',
+            'Meeting Settings',
             style: TextStyle(
               color: Colors.white,
             ),
@@ -83,22 +63,30 @@ class _joinSettingsState extends State<joinSettings> {
                           ? Color(0xFF191919)
                           : Color(0xFFf9f9f9),
                       title: Text(
-                        "Audio Only",
+                        "Joining Settings",
                         style: TextStyle(
                           fontSize: 16,
                         ),
                       ),
-                      subtitle: Text('Join with Audio Only'),
+                      subtitle: Text('Settings and preferences for all meetings you join', overflow: TextOverflow.ellipsis,),
+                      dense: true,
                       contentPadding:
                       EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      dense: true,
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                          value: isAudioOnly,
-                          onChanged: onAudioOnlyChanged,
-                        ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 20,
+                            color: Colors.grey,
+                          )
+                        ],
                       ),
+                      onTap: () => Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                              builder: (context) => joinSettings())),
                     ),
                     Divider(
                       height: 1,
@@ -113,22 +101,30 @@ class _joinSettingsState extends State<joinSettings> {
                           ? Color(0xFF191919)
                           : Color(0xFFf9f9f9),
                       title: Text(
-                        "Audio Muted",
+                        "Hosting Settings",
                         style: TextStyle(
                           fontSize: 16,
                         ),
                       ),
-                      subtitle: Text('Join with audio muted'),
+                      subtitle: Text('Settings and customization for all meetings you host', overflow: TextOverflow.ellipsis,),
                       dense: true,
                       contentPadding:
                       EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                          value: isAudioMuted,
-                          onChanged: onAudioMutedChanged,
-                        ),
-                      ),
+                      trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          size: 20,
+                          color: Colors.grey,
+                        )
+                      ],
+                    ),
+                      onTap: () => Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                              builder: (context) => hostingSettings())),
                     ),
                     Divider(
                       height: 1,
@@ -143,22 +139,30 @@ class _joinSettingsState extends State<joinSettings> {
                           ? Color(0xFF191919)
                           : Color(0xFFf9f9f9),
                       title: Text(
-                        "Video Muted",
+                        "Global Meet Settings",
                         style: TextStyle(
                           fontSize: 16,
                         ),
                       ),
-                      subtitle: Text('Join with video muted'),
+                      subtitle: Text('Settings and customization for global live meetings you host', overflow: TextOverflow.ellipsis,),
                       dense: true,
                       contentPadding:
                       EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                          value: isVideoMuted,
-                          onChanged: onVideoMutedChanged,
-                        ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 20,
+                            color: Colors.grey,
+                          )
+                        ],
                       ),
+                      onTap: () => Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                              builder: (context) => GlobalSettings())),
                     ),
                     Divider(
                       height: 1,
@@ -173,63 +177,36 @@ class _joinSettingsState extends State<joinSettings> {
                           ? Color(0xFF191919)
                           : Color(0xFFf9f9f9),
                       title: Text(
-                        "Use Profile Picture",
+                        "Random Meet Settings",
                         style: TextStyle(
                           fontSize: 16,
                         ),
                       ),
-                      subtitle:
-                      Text('Use profile picture as avatar in meeting'),
+                      subtitle: Text('Settings and customization for random meeting', overflow: TextOverflow.ellipsis,),
                       dense: true,
                       contentPadding:
                       EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                          value: useAvatar,
-                          onChanged: onAvatarChanged,
-                        ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 20,
+                            color: Colors.grey,
+                          )
+                        ],
                       ),
+                      onTap: () => Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                              builder: (context) => RandomSettings())),
                     ),
                     Divider(
                       height: 1,
                       color: themeNotifier.getTheme() == darkTheme
                           ? Color(0xFF303030)
                           : Colors.black12,
-                      indent: 15,
-                      endIndent: 0,
-                    ),
-                    ListTile(
-                      tileColor: themeNotifier.getTheme() == darkTheme
-                          ? Color(0xFF191919)
-                          : Color(0xFFf9f9f9),
-                      title: Text(
-                        "Low Bandwidth Mode",
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                      subtitle: Text(
-                          'Automatically enabled Low Bandwidth mode when needed'),
-                      dense: true,
-                      contentPadding:
-                      EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                          value: lowMode,
-                          onChanged: onLowChanged,
-                        ),
-                      ),
-                    ),
-                    Divider(
-                      height: 1,
-                      color: themeNotifier.getTheme() == darkTheme
-                          ? Color(0xFF303030)
-                          : Colors.black12,
-                    ),
-                    SizedBox(
-                      height: 8,
                     ),
                   ]),
             ),
@@ -237,50 +214,5 @@ class _joinSettingsState extends State<joinSettings> {
         ),
       ),
     );
-  }
-
-  onAudioOnlyChanged(bool value) {
-    setState(() {
-      isAudioOnly = value;
-    });
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('isAudioOnly', value);
-    });
-  }
-
-  onLowChanged(bool value) {
-    setState(() {
-      lowMode = value;
-    });
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('lowMode', value);
-    });
-  }
-
-  onAudioMutedChanged(bool value) {
-    setState(() {
-      isAudioMuted = value;
-    });
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('isAudioMuted', value);
-    });
-  }
-
-  onVideoMutedChanged(bool value) {
-    setState(() {
-      isVideoMuted = value;
-    });
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('isVideoMuted', value);
-    });
-  }
-
-  onAvatarChanged(bool value) {
-    setState(() {
-      useAvatar = value;
-    });
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('useAvatar', value);
-    });
   }
 }

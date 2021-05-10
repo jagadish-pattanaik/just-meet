@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:jagu_meet/theme/theme.dart';
 import 'package:jagu_meet/theme/themeNotifier.dart';
+import 'package:jagu_meet/widgets/cupertinoSwitchListTile.dart';
 import 'package:package_info/package_info.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,14 +25,7 @@ class _generalSettingsState extends State<generalSettings> {
   Future<void> checkVersion() async {
     _updateInfo?.updateAvailability == UpdateAvailability.updateAvailable
         ? InAppUpdate.performImmediateUpdate()
-        : Fluttertoast.showToast(
-            msg: 'Just Meet is up to date!',
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.SNACKBAR,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.black,
-            textColor: Colors.white,
-            fontSize: 16.0);
+        : ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('Just Meet is up to date!',)));
   }
 
   getAppInfo() async {
@@ -59,9 +52,10 @@ class _generalSettingsState extends State<generalSettings> {
     var darkModeOn = prefs.getBool('darkMode');
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
         statusBarColor: darkModeOn ? Colors.black : Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.black,
-      systemNavigationBarIconBrightness: Brightness.dark,));
+      //statusBarIconBrightness: Brightness.dark,
+      //systemNavigationBarColor: Colors.black,
+      //systemNavigationBarIconBrightness: Brightness.dark,
+    ));
     // setBgColor(themeNotifier);
   }
 
@@ -82,7 +76,7 @@ class _generalSettingsState extends State<generalSettings> {
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(
-              Icons.arrow_back,
+              Icons.arrow_back_ios_sharp,
               color: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(),
@@ -117,7 +111,7 @@ class _generalSettingsState extends State<generalSettings> {
                           fontSize: 16,
                         ),
                       ),
-                      subtitle: Text('Your current app version'),
+                      subtitle: Text('Your current app version', overflow: TextOverflow.ellipsis,),
                       contentPadding:
                           EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
                       trailing: Row(
@@ -149,10 +143,7 @@ class _generalSettingsState extends State<generalSettings> {
                       indent: 15,
                       endIndent: 0,
                     ),
-                    ListTile(
-                      tileColor: themeNotifier.getTheme() == darkTheme
-                          ? Color(0xFF191919)
-                          : Color(0xFFf9f9f9),
+                    CupertinoSwitchListTile(
                       title: Text(
                         "Dark Mode",
                         style: TextStyle(
@@ -160,21 +151,15 @@ class _generalSettingsState extends State<generalSettings> {
                         ),
                       ),
                       subtitle: Text(themeNotifier.getTheme() == darkTheme
-                          ? 'On': 'Off'),
+                          ? 'On': 'Off', overflow: TextOverflow.ellipsis,),
                       dense: true,
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                            value: _darkTheme,
-                            onChanged: (val) {
-                              setState(() {
-                                _darkTheme = val;
-                              });
-                              onThemeChangedStart(val, themeNotifier);
-                            }),
-                      ),
+                        value: _darkTheme,
+                        onChanged: (val) {
+                          setState(() {
+                            _darkTheme = val;
+                          });
+                          onThemeChangedStart(val, themeNotifier);
+                        }
                     ),
                     Divider(
                       height: 1,
@@ -184,10 +169,7 @@ class _generalSettingsState extends State<generalSettings> {
                       indent: 15,
                       endIndent: 0,
                     ),
-                    ListTile(
-                      tileColor: themeNotifier.getTheme() == darkTheme
-                          ? Color(0xFF191919)
-                          : Color(0xFFf9f9f9),
+                    CupertinoSwitchListTile(
                       title: Text(
                         "Send diagnostic info",
                         style: TextStyle(
@@ -197,18 +179,12 @@ class _generalSettingsState extends State<generalSettings> {
                       subtitle:
                           Text('We can use this to make this product better'),
                       dense: true,
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Transform.scale(
-                        scale: 0.8,
-                        child: CupertinoSwitch(
-                            value: diagnostic,
-                            onChanged: (val) {
-                              setState(() {
-                                diagnostic = val;
-                              });
-                            }),
-                      ),
+                        value: diagnostic,
+                        onChanged: (val) {
+                          setState(() {
+                            diagnostic = val;
+                          });
+                        }
                     ),
                     Divider(
                       height: 1,
