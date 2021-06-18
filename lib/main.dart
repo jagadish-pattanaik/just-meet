@@ -1,32 +1,41 @@
 import 'dart:io';
 import 'package:device_info/device_info.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_offline/flutter_offline.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:in_app_update/in_app_update.dart';
-import 'package:jagu_meet/screens/host.dart';
+//import 'package:jagu_meet/screens/agora/hostLive.dart';
+//import 'package:jagu_meet/screens/agora/join.dart';
+import 'package:jagu_meet/screens/meeting/globalLiveDetails.dart';
+import 'package:jagu_meet/screens/meeting/host.dart';
+import 'package:jagu_meet/screens/meeting/meetDetails.dart';
 import 'package:jagu_meet/screens/others/app_feedback.dart';
 import 'package:jagu_meet/screens/others/covAwarness.dart';
+import 'package:jagu_meet/screens/others/infoPage.dart';
 import 'package:jagu_meet/screens/others/report_abuse.dart';
 import 'package:jagu_meet/screens/others/notifyPage.dart';
-import 'package:jagu_meet/screens/profilePage.dart';
-import 'package:jagu_meet/screens/settings/AdvancedSettings.dart';
-import 'package:jagu_meet/screens/settings/generalSettings.dart';
-import 'package:jagu_meet/screens/settings/joiningSettings.dart';
-import 'package:jagu_meet/screens/settings/meetingSettings.dart';
-import 'package:jagu_meet/screens/schedule/viewScheduled.dart';
+import 'package:jagu_meet/screens/user/profilePage.dart';
+import 'package:jagu_meet/screens/meeting/settings/AdvancedSettings.dart';
+import 'package:jagu_meet/screens/meeting/settings/generalSettings.dart';
+import 'package:jagu_meet/screens/meeting/settings/joiningSettings.dart';
+import 'package:jagu_meet/screens/meeting/settings/meetingSettings.dart';
+import 'package:jagu_meet/screens/meeting/schedule/viewScheduled.dart';
 import 'package:jagu_meet/screens/others/webview.dart';
+import 'package:jagu_meet/widgets/cupertinoSwitchListTile.dart';
+import 'package:jagu_meet/widgets/quiet_box.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 //import 'package:jagu_meet/sever_db/feedbacks%20db/feedbacks_db_controller.dart';
 //import 'package:jagu_meet/sever_db/feedbacks%20db/feeedbacks_db.dart';
 //import 'package:jagu_meet/sever_db/meetings%20db/meetings_db.dart';
 //import 'package:jagu_meet/sever_db/meetings%20db/servere_db_controller.dart';
-import 'screens/root.dart';
+//import 'model/live.dart';
+import 'screens/onboarding/root.dart';
 import 'package:jitsi_meet/jitsi_meet.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'screens/loginPage.dart';
+import 'screens/user/loginPage.dart';
 import 'package:share/share.dart';
 import 'widgets/dialogs.dart';
 import 'package:rate_my_app/rate_my_app.dart';
@@ -43,19 +52,22 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:package_info/package_info.dart';
 import 'package:jagu_meet/model/note.dart';
 import 'utils/databasehelper_scheduled.dart';
-import 'screens/schedule/NoteScreen.dart';
+import 'screens/meeting/schedule/NoteScreen.dart';
 import 'package:quick_actions/quick_actions.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:connectivity/connectivity.dart';
 import 'package:badges/badges.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'screens/editPersonal.dart';
 import 'package:intl/intl.dart';
 import 'package:timeago/timeago.dart' as timeago;
 //import 'package:jagu_meet/sever_db/host meets db/host controller.dart';
 //import 'package:jagu_meet/sever_db/host meets db/host meet db.dart';
 import 'package:jagu_meet/screens/others/fullImage.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:jagu_meet/model/liveMeetModel.dart';
+import 'dart:async';
+import 'package:url_strategy/url_strategy.dart';
 
 //jagadish_android_apps
 
@@ -63,13 +75,16 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   SharedPreferences.getInstance().then((prefs) {
-    var darkModeOn = prefs.getBool('darkMode') ?? false;
+    var darkModeOn = prefs.getBool('darkMode') ?? SchedulerBinding.instance.window.platformBrightness == Brightness.dark ? true : false;
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: darkModeOn ? Colors.black : Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.black,
-      systemNavigationBarIconBrightness: Brightness.dark,
+      statusBarColor: Colors.transparent,
+    //  statusBarIconBrightness: darkModeOn ? Brightness.dark : Brightness.light,
+      systemNavigationBarColor: darkModeOn
+          ? Color(0xff0d0d0d)
+          : Color(0xFFFFFFFF),
+     // systemNavigationBarIconBrightness: darkModeOn ? Brightness.dark : Brightness.dark,
     ));
+    setPathUrlStrategy();
     runApp(
       ChangeNotifierProvider<ThemeNotifier>(
         create: (_) => ThemeNotifier(darkModeOn ? darkTheme : lightTheme),
@@ -82,68 +97,31 @@ void main() async {
 }
 
 class MyApp extends StatefulWidget {
-  //final UserDetails detailsUser;
-  //MyApp({Key key, this.detailsUser}) : super(key : key);
-
   @override
   _MyAppState createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
-  //final UserDetails detailsUser;
-  // _MyAppState(this.detailsUser);
+final liveMeetReference = FirebaseDatabase.instance.reference().child('liveMeet');
 
-  List<Note> items = new List();
-  // List<Note1> items1 = new List();
-  List<Note2> items2 = new List();
+class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
+  List<Note> items = [];
+  List<Note2> items2 = [];
   DatabaseHelper db = new DatabaseHelper();
-  // DatabaseHelper1 db1 = new DatabaseHelper1();
   DatabaseHelper2 db2 = new DatabaseHelper2();
 
-  int bottomSelectedIndex = 0;
+  //final FlareControls flareControls = FlareControls();
+  //final databaseReference = FirebaseFirestore.instance;
+  //List<Live> list =[];
+  //bool ready =false;
+  //Live liveUser;
+  //var image ='https://nichemodels.co/wp-content/uploads/2019/03/user-dummy-pic.png';
 
-  List<BottomNavigationBarItem> buildBottomNavBarItems() {
-    return [
-      BottomNavigationBarItem(
-        icon: new Icon(Icons.videocam),
-        label: 'Meet',
-      ),
-      BottomNavigationBarItem(
-        icon: items2.length == 0
-            ? Icon(Icons.event)
-            : Badge(
-                toAnimate: true,
-                animationType: BadgeAnimationType.scale,
-                badgeContent: Text("${items2.length}",
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(color: Colors.white)),
-                child: Icon(Icons.event),
-              ),
-        label: 'Meetings',
-      ),
-      BottomNavigationBarItem(
-        icon: new Icon(Icons.settings),
-        label: 'Settings',
-      ),
-      BottomNavigationBarItem(
-        icon: CachedNetworkImage(
-          imageUrl: _userPhotoUrl,
-          placeholder: (context, url) => Icon(Icons.person),
-          errorWidget: (context, url, error) => Icon(Icons.person),
-          imageBuilder: (context, imageProvider) => Container(
-              width: 23,
-              height: 23,
-              decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: DecorationImage(
-                    image: imageProvider,
-                    fit: BoxFit.scaleDown,
-                  ))),
-        ),
-        label: 'Profile',
-      )
-    ];
-  }
+  List<LiveMeet> liveMeets = [];
+  StreamSubscription _onMeetAddedSubscription;
+  StreamSubscription _onMeetChangedSubscription;
+  StreamSubscription _onMeetDeletedSubscription;
+
+  int bottomSelectedIndex = 0;
 
   String shortcut = "no action set";
 
@@ -169,15 +147,18 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     keepPage: true,
   );
 
-  RefreshController _refreshController = RefreshController(
-    initialRefresh: true,
-  );
+  RefreshController _refreshController =
+  RefreshController(initialRefresh: true);
 
   final serverText = TextEditingController();
   final roomText = TextEditingController();
   final subjectText = TextEditingController();
   final nameText = TextEditingController();
   final emailText = TextEditingController();
+
+  final liveMeetTopic = TextEditingController();
+
+  //AnimationController animecontroller;
 
   var isAudioOnly = true;
   var isAudioMuted = true;
@@ -209,16 +190,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
   var quality;
 
-  var PchatEnabled;
-  var PliveEnabled;
-  var PrecordEnabled;
-  var PraiseEnabled;
-  var PshareYtEnabled;
-  var PKickOutEnabled;
-
-  var PmeetingId = '...';
-  var PmeetName;
-
   var SchatEnabled;
   var SliveEnabled;
   var SrecordEnabled;
@@ -234,11 +205,10 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   var linkKick;
   var linkHost = '';
 
-  var _darkTheme;
-
-  bool _idError = false;
   bool isButtonEnabled;
   bool isEnabled;
+
+  bool searchState = false;
 
   final now = DateTime.now();
   String version = '.';
@@ -273,17 +243,26 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     Future.delayed(Duration(milliseconds: 500), () {});
   }
 
-  getPInfo() async {
+  var GkickEnabled = false;
+  var GshareYtEnabled = true;
+  var GshowName = true;
+  var GchatEnabled = true;
+  var GliveEnabled = false;
+  var GrecordEnabled = false;
+  var GraiseEnabled =  true;
+  getGlobalSettings() async {
     await SharedPreferences.getInstance().then((prefs) {
       setState(() {
-        PchatEnabled = prefs.getBool('PchatEnabled') ?? true;
-        PliveEnabled = prefs.getBool('PliveEnabled') ?? false;
-        PrecordEnabled = prefs.getBool('PrecordEnabled') ?? false;
-        PraiseEnabled = prefs.getBool('PraiseEnabled') ?? true;
-        PshareYtEnabled = prefs.getBool('PshareYtEnabled') ?? true;
-        PKickOutEnabled = prefs.getBool('PKickOutEnabled') ?? false;
+        GchatEnabled = prefs.getBool('GchatEnabled') ?? true;
+        GliveEnabled = prefs.getBool('GliveEnabled') ?? false;
+        GrecordEnabled = prefs.getBool('GrecordEnabled') ?? false;
+        GraiseEnabled = prefs.getBool('GraiseEnabled') ?? true;
+        GkickEnabled = prefs.getBool('GkickEnabled') ?? false;
+        GshareYtEnabled = prefs.getBool('GshareYtEnabled') ?? true;
+        GshowName = prefs.getBool('GshowName') ?? true;
       });
     });
+    Future.delayed(Duration(milliseconds: 500), () {});
   }
 
   getAppInfo() async {
@@ -296,14 +275,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   checkConnection() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.none) {
-      Fluttertoast.showToast(
-          msg: 'No Internet Connection!',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
+      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
     } else {
       checkVersion();
     }
@@ -436,14 +408,15 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     prefs.setBool('darkMode', value);
     var darkModeOn = prefs.getBool('darkMode');
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: darkModeOn ? Colors.black : Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.black,
-      systemNavigationBarIconBrightness: Brightness.dark,
+      statusBarColor: Colors.transparent,
+     // statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: darkModeOn
+          ? Color(0xff0d0d0d)
+          : Color(0xFFFFFFFF),
+     // systemNavigationBarIconBrightness: Brightness.dark,
     ));
   }
 
-  var linkName = '...';
   final User user = FirebaseAuth.instance.currentUser;
   final FirebaseAuth auth = FirebaseAuth.instance;
   _getUserAuth() async {
@@ -453,11 +426,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       _userName = user.displayName;
       _userEmail = user.email;
       _userUid = user.uid;
-    });
-    setState(() {
-      linkName = '${_userName[0]}' +
-          '${_userUid.substring(1, 9)}' +
-          '${_userName.substring(_userName.length - 1)}';
     });
     Future.delayed(Duration(milliseconds: 1000), () {});
   }
@@ -518,7 +486,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                       email: _userEmail,
                       uid: _userUid,
                       url: _userPhotoUrl,
-                      pmeet: PmeetingId,
                     )));
       }
     });
@@ -547,39 +514,12 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                 )));
   }
 
-  pmeetdetails() async {
-    await SharedPreferences.getInstance().then((prefs) {
-      setState(() {
-        PmeetingId =
-            prefs.getString('personalMeetId') ?? randomNumeric(11).toString();
-        PmeetName = prefs.getString('personalMeet') ??
-            _userName + "'s" + ' personal Just Meet meeting';
-      });
-    });
-    Future.delayed(Duration(milliseconds: 500), () {});
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setString('personalMeetId', PmeetingId);
-    });
-    Future.delayed(Duration(milliseconds: 500), () {});
-  }
-
-  final ValueNotifier<bool> joinlinkname = ValueNotifier<bool>(false);
-  joinchanged() async {
-    roomText.clear();
-    FocusManager.instance.primaryFocus.unfocus();
-    joinlinkname.value = !joinlinkname.value;
-    await Future.delayed(Duration(milliseconds: 500), () {});
-    myFocusNode.requestFocus();
-    istyping(roomText);
-  }
+  AnimationController _animationController;
 
   @override
   void initState() {
-    super.initState();
     _getUserAuth();
     getSettings();
-    getPInfo();
-    pmeetdetails();
     handleDynamicLinks();
     handleQuickActions();
     initDataBase();
@@ -590,27 +530,60 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
         onPictureInPictureWillEnter: _onPictureInPictureWillEnter,
         onPictureInPictureTerminated: _onPictureInPictureTerminated,
         onError: _onError));
+    _onMeetAddedSubscription = liveMeetReference.onChildAdded.listen(_onMeetAdded);
+    _onMeetChangedSubscription = liveMeetReference.onChildChanged.listen(_onMeetUpdated);
+    _onMeetDeletedSubscription = liveMeetReference.onChildRemoved.listen(_onMeetRemoved);
+    //list = [];
+    //liveUser = new Live(username: _userName,me: true,image: _userPhotoUrl );
+    //setState(() {
+    //  list.add(liveUser);
+    //});
+   // dbChangeListen();
+    _animationController =
+    new AnimationController(vsync: this, duration: Duration(seconds: 1));
+    _animationController.repeat(reverse: true);
+    getGlobalSettings();
     isEmpty();
     getDevice();
     getAppInfo();
     checkConnection();
     Future.delayed(Duration(milliseconds: 500), () {
-      Fluttertoast.showToast(
-          msg: 'Signed in as ' + _userName,
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
+      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('Signed in as ' + _userName,)));
     });
     review();
+    super.initState();
   }
+
+  //void dbChangeListen(){
+   // databaseReference.collection('liveuser').orderBy("time",descending: true)
+   //     .snapshots()
+  //      .listen((result) {   // Listens to update in appointment collection
+//
+  //    setState(() {
+  //      list = [];
+  //      liveUser = new Live(username: _userName ,me: true,image: _userPhotoUrl );
+  //      list.add(liveUser);
+  //    });
+  //    result.docs.forEach((result) {
+  //      setState(() {
+   //       list.add(new Live(username: result.data()['name'],image: result.data()['image'],channelId:result.data()['channel'],me: false));
+//
+   //     });
+  //    });
+   // });
+//
+  //}
 
   review() async {
     if (await inAppReview.isAvailable()) {
       inAppReview.requestReview();
     }
+  }
+
+  _onMeetRemoved(Event event) {
+    setState(() {
+      liveMeets.remove(LiveMeet.fromSnapshot(event.snapshot));
+    });
   }
 
  // void _submitFeedbackData(
@@ -626,7 +599,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
   void meetFeedback() {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     rateMyApp.showStarRateDialog(
       context,
       title: 'How was your meeting?',
@@ -649,7 +621,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: themeNotifier.getTheme() == darkTheme
-                    ? Colors.blueAccent
+                    ? Color(0xff0184dc)
                     : Colors.blue,
               ),
             ),
@@ -665,23 +637,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                               userid: _userUid,
                               email: _userEmail,
                               name: _userName)));
-                  Fluttertoast.showToast(
-                      msg: 'We are sorry for that...',
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.SNACKBAR,
-                      timeInSecForIosWeb: 1,
-                      backgroundColor: Colors.black,
-                      textColor: Colors.white,
-                      fontSize: 16.0);
                 } else if (stars <= 5) {
-                  Fluttertoast.showToast(
-                      msg: 'Thank You for your feedback!',
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.SNACKBAR,
-                      timeInSecForIosWeb: 1,
-                      backgroundColor: Colors.black,
-                      textColor: Colors.white,
-                      fontSize: 16.0);
                 }
               } else {
                 Navigator.pop(context);
@@ -695,7 +651,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: themeNotifier.getTheme() == darkTheme
-                    ? Colors.blueAccent
+                    ? Color(0xff0184dc)
                     : Colors.blue,
               ),
             ),
@@ -711,13 +667,17 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
-    super.dispose();
     JitsiMeet.removeAllListeners();
+    _onMeetAddedSubscription.cancel();
+    _onMeetChangedSubscription.cancel();
+    _onMeetDeletedSubscription.cancel();
+    _animationController.dispose();
+    super.dispose();
+    //animecontroller.dispose();
   }
 
   Future<bool> exitConf() async {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     return showDialog(
         context: context,
         builder: (context) {
@@ -737,7 +697,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                     'No',
                     style: TextStyle(
                       color: themeNotifier.getTheme() == darkTheme
-                          ? Colors.blueAccent
+                          ? Color(0xff0184dc)
                           : Colors.blue,
                     ),
                   ),
@@ -749,7 +709,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                     'Yes',
                     style: TextStyle(
                       color: themeNotifier.getTheme() == darkTheme
-                          ? Colors.blueAccent
+                          ? Color(0xff0184dc)
                           : Colors.blue,
                     ),
                   ),
@@ -780,9 +740,13 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       });
     } else if (index == 2) {
       setState(() {
-        appBarTitle = 'Settings';
+        appBarTitle = 'Live';
       });
     } else if (index == 3) {
+      setState(() {
+        appBarTitle = 'Settings';
+      });
+    } else if (index == 4) {
       setState(() {
         appBarTitle = 'Profile';
       });
@@ -823,28 +787,296 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     }
   }
 
-  void _onRefresh() async {
-    setState(() {});
-    _refreshController.refreshCompleted();
-  }
-
-  void _onLoading() async {
-    await Future.delayed(Duration(milliseconds: 1000));
-    if (mounted) setState(() {});
-    _refreshController.loadComplete();
-  }
-
   onSignOut() async {
     await SharedPreferences.getInstance().then((prefs) {
       prefs.setBool('signStatus', false);
     });
   }
 
+  List restrictedTopics = [
+    'Just Meet',
+    'just Meet',
+    'Just meet',
+    'just meet',
+    'JustMeet',
+    'justMeet',
+    'Justmeet',
+    'justmeet',
+  ];
+
+  List restrictedIds = [
+    '99999999999',
+    '88888888888',
+    '77777777777',
+    '66666666666',
+    '55555555555',
+    '44444444444',
+    '33333333333',
+    '22222222222',
+    '11111111111',
+    '12345678900',
+    '12345678910',
+    '01234567890',
+  ];
+
+  List<String> hateSpeech = [
+    'Bitch',
+    'Fuck',
+    'Anal',
+    'Fuck',
+    'sex',
+    'Vaginal',
+    'Piss',
+    'Rascal',
+    'Bastard',
+    'Xxx',
+    'Porn',
+    'Terrorism',
+    'Idiot',
+    'F*ck',
+    'Vagina',
+    'F**k',
+    'Shit',
+    'fucker',
+    'Chudai',
+    'Dick',
+    'Asshole',
+    'asshole',
+    '****',
+    '***',
+    'Madarchod',
+    'Behenchod',
+    'Maa ki',
+    'Maaki',
+    'Maki',
+    'Lund',
+    'Chut',
+    'Chutad',
+    'Bhosdike',
+    'Bsdk',
+    'Betichod',
+    'Chutiya',
+    'Harami',
+    'chut',
+    'Haramkhor'
+  ];
+
+
+  bool hateError = false;
+  bool restrcitedTopicError =  false;
+  bool restrcitedIdError =  false;
+  restrictedTopicDetect(final TextEditingController controller) {
+    for (var i = 0; i < restrictedTopics.length; i++) {
+      if (controller.text.contains(restrictedTopics[i])) {
+        setState(() {
+          restrcitedTopicError = true;
+        });
+      } else if (controller.text.toLowerCase().contains(restrictedTopics[i])) {
+        setState(() {
+          restrcitedTopicError = true;
+        });
+      } else if (controller.text.toUpperCase().contains(restrictedTopics[i])) {
+        setState(() {
+          restrcitedTopicError = true;
+        });
+      } else if (controller.text.isEmpty) {
+        setState(() {
+          restrcitedTopicError = false;
+        });
+      }else if (!controller.text.contains(restrictedTopics[i])) {
+        setState(() {
+          restrcitedTopicError = false;
+        });
+      } else if (!controller.text.toLowerCase().contains(restrictedTopics[i])) {
+        setState(() {
+          restrcitedTopicError = false;
+        });
+      } else if (!controller.text.toUpperCase().contains(restrictedTopics[i])) {
+        setState(() {
+          restrcitedTopicError = false;
+        });
+      }
+    }
+  }
+
+  restrictedIdDetect(final TextEditingController controller) {
+    for (var i = 0; i < restrictedIds.length; i++) {
+      if (controller.text.contains(restrictedIds[i])) {
+        setState(() {
+          restrcitedIdError = true;
+        });
+      } else if (controller.text.toLowerCase().contains(restrictedIds[i])) {
+        setState(() {
+          restrcitedIdError = true;
+        });
+      } else if (controller.text.toUpperCase().contains(restrictedIds[i])) {
+        setState(() {
+          restrcitedIdError = true;
+        });
+      } else if (controller.text.isEmpty) {
+        setState(() {
+          restrcitedIdError = false;
+        });
+      }else if (!controller.text.contains(restrictedIds[i])) {
+        setState(() {
+          restrcitedIdError = false;
+        });
+      } else if (!controller.text.toLowerCase().contains(restrictedIds[i])) {
+        setState(() {
+          restrcitedIdError = false;
+        });
+      } else if (!controller.text.toUpperCase().contains(restrictedIds[i])) {
+        setState(() {
+          restrcitedIdError = false;
+        });
+      }
+    }
+  }
+
+  hateDetect(final TextEditingController controller) {
+    for (var i = 0; i < hateSpeech.length; i++) {
+      if (controller.text.contains(hateSpeech[i])) {
+        setState(() {
+          hateError = true;
+        });
+      } else if (controller.text.toLowerCase().contains(hateSpeech[i])) {
+        setState(() {
+          hateError = true;
+        });
+      } else if (controller.text.toUpperCase().contains(hateSpeech[i])) {
+        setState(() {
+          hateError = true;
+        });
+      } else if (controller.text.isEmpty) {
+        setState(() {
+          hateError = false;
+        });
+      } else if (!controller.text.contains(hateSpeech[i])) {
+        setState(() {
+          hateError = false;
+        });
+      } else if (!controller.text.toLowerCase().contains(hateSpeech[i])) {
+        setState(() {
+          hateError = false;
+        });
+      } else if (!controller.text.toUpperCase().contains(hateSpeech[i])) {
+        setState(() {
+          hateError = false;
+        });
+      }
+    }
+  }
+
+  List<BottomNavigationBarItem> buildBottomNavBarItems() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+    return [
+      BottomNavigationBarItem(
+        icon: Icon(Icons.videocam_outlined),
+        activeIcon: Icon(Icons.videocam),
+        label: 'Meet',
+      ),
+      BottomNavigationBarItem(
+        icon: items2.length == 0
+            ? Icon(Icons.schedule_outlined)
+            : Badge(
+          toAnimate: true,
+          animationType: BadgeAnimationType.scale,
+          badgeContent: Text("${items2.length}",
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.white)),
+          child: Icon(Icons.schedule_outlined),
+        ),
+        label: 'Meetings',
+      ),
+      BottomNavigationBarItem(
+        icon: liveMeets.isEmpty ? Icon(Icons.live_tv_outlined) :  Stack(
+            children: <Widget>[
+              Icon(Icons.live_tv_outlined),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: FadeTransition(
+                  opacity: _animationController,
+                  child: Container(
+                      decoration: new BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.all(
+                            Radius.circular(
+                                2.0) //         <--- border radius here
+                        ),
+                        gradient: LinearGradient(
+                            colors: [Colors.red, Colors.redAccent],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight
+                        ),
+                      ),
+
+                      child: Padding(
+                        padding: const EdgeInsets.all(1.0),
+                        child: Text(
+                          'LIVE',
+                          style: TextStyle(
+                              fontSize: 6,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold
+                          ),
+                        ),
+                      )
+                  ),
+                ),
+              ),
+            ]
+        ),
+        label: 'Live',
+      ),
+      BottomNavigationBarItem(
+    activeIcon: Icon(Icons.settings),
+        icon: new Icon(Icons.settings_outlined),
+        label: 'Settings',
+      ),
+      BottomNavigationBarItem(
+    activeIcon: CachedNetworkImage(
+      imageUrl: _userPhotoUrl,
+      placeholder: (context, url) => Icon(Icons.person),
+      errorWidget: (context, url, error) => Icon(Icons.person),
+      imageBuilder: (context, imageProvider) => Container(
+          width: 23,
+          height: 23,
+          decoration: BoxDecoration(
+                  border: Border.all(
+                    width: 1,
+                    color: themeNotifier.getTheme() == darkTheme
+                      ? Colors.white
+                      : Colors.blue,
+              ),
+              shape: BoxShape.circle,
+              image: DecorationImage(
+                image: imageProvider,
+                fit: BoxFit.scaleDown,
+              ))),
+    ),
+        icon: CachedNetworkImage(
+          imageUrl: _userPhotoUrl,
+          placeholder: (context, url) => Icon(Icons.person),
+          errorWidget: (context, url, error) => Icon(Icons.person),
+          imageBuilder: (context, imageProvider) => Container(
+              width: 23,
+              height: 23,
+              decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: DecorationImage(
+                    image: imageProvider,
+                    fit: BoxFit.scaleDown,
+                  ))),
+        ),
+        label: 'Profile',
+      )
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
-    double width = MediaQuery.of(context).size.width;
     return WillPopScope(
       onWillPop: exitConf,
       child: MaterialApp(
@@ -853,61 +1085,96 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
         theme: themeNotifier.getTheme(),
         home: Scaffold(
           appBar: AppBar(
-            iconTheme: IconThemeData(color: Colors.white),
-            backgroundColor: themeNotifier.getTheme() == darkTheme
-                ? Color(0xFF242424)
-                : Colors.blue,
-            elevation: 5,
+            iconTheme: IconThemeData(color: themeNotifier.getTheme() == darkTheme
+                ? Colors.white : Colors.black54),
             centerTitle: true,
-            title: Text(
+            backgroundColor: themeNotifier.getTheme() == darkTheme
+                ? Color(0xff0d0d0d)
+                : Color(0xFFFFFFFF),
+            elevation: 0,
+            bottom: PreferredSize(
+                child: Divider(
+                  height: 1,
+                    color: themeNotifier.getTheme() == darkTheme
+                        ?  Color(0xFF303030) : Colors.black12
+                ),
+                preferredSize: Size(double.infinity, 0.0)),
+            title: //!searchState ?
+             Text(
               appBarTitle,
               style: TextStyle(
-                color: Colors.white,
+                color: themeNotifier.getTheme() == darkTheme
+                    ? Colors.white : Colors.black54,
               ),
-            ),
+            ),//: TextField(
+              //onChanged: (text) {
+             //   searchMethod(text);
+             // },
+             // decoration: InputDecoration(icon: Icon(Icons.search), hintText: 'Search global meetings...', hintStyle: TextStyle(color: Colors.white)),),
             actions: [
-              IconButton(
+         //     bottomSelectedIndex == 2 ? !searchState ? IconButton(icon: Icon(Icons.search, color: Colors.white,), onPressed: () {
+           //     setState(() {
+           //       searchState = !searchState;
+           //     });
+          //    }) : IconButton(icon: Icon(Icons.clear, color: Colors.white,), onPressed: () {
+            //    setState(() {
+           //       searchState = !searchState;
+            //    });
+           //   }) : Container(),
+              inMeeting == false
+                  ? IconButton(
                   icon: Icon(
                     Icons.add,
-              color: inMeeting
-                  ? Colors.grey
-                  : themeNotifier.getTheme() == darkTheme
-                  ? Colors.blueAccent
-                  : Colors.white),
-                onPressed: () => inMeeting
-                    ? null
-                    : Navigator.push(
-                    context,
-                    CupertinoPageRoute(
-                        builder: (context) => HostPage(
-                          name: _userName,
-                          email: _userEmail,
-                          uid: _userUid,
-                          url: _userPhotoUrl,
-                          pmeet: PmeetingId,
-                          linkNName: linkName,
-                        ))),
-              ),
+              color: Colors.white),
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                          builder: (context) =>
+                              HostPage(
+                                name: _userName,
+                                email: _userEmail,
+                                uid: _userUid,
+                                url: _userPhotoUrl,
+                              )));
+                }
+              ) : Container(),
             ],
           ),
           resizeToAvoidBottomInset: false,
           drawer: mainDrawer(),
-          bottomNavigationBar: BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
-            selectedFontSize: 10,
-            unselectedFontSize: 10,
-            unselectedItemColor: Colors.grey,
+          bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+          color: themeNotifier.getTheme() == darkTheme
+              ? Color(0xff0d0d0d)
+              : Color(0xFFFFFFFF),
+    boxShadow: [
+    BoxShadow(
+    color: themeNotifier.getTheme() == darkTheme
+        ? Colors.grey
+        : Color(0xFF242424)
+    ),
+    ],
+    ),
+    child: BottomNavigationBar(
+      unselectedItemColor: Color(0xff909090),
+      iconSize: 25,
+      type: BottomNavigationBarType.fixed,
+      showUnselectedLabels: true,
+      selectedFontSize: 10,
+      unselectedFontSize: 10,
             backgroundColor: themeNotifier.getTheme() == darkTheme
-                ? Color(0xFF242424)
-                : Color(0xFFf9f9f9),
+                ? Color(0xff0d0d0d)
+                : Color(0xFFFFFFFF),
             selectedItemColor: themeNotifier.getTheme() == darkTheme
-                ? Colors.blueAccent
+                ? Colors.white
                 : Colors.blue,
             currentIndex: bottomSelectedIndex,
             onTap: (index) {
               bottomTapped(index);
             },
             items: buildBottomNavBarItems(),
+          ),
           ),
           body: SafeArea(
             child: OfflineBuilder(
@@ -954,6 +1221,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                     children: [
                       homeScreen(),
                       scheduleMeeting(),
+                      liveMeeting(),
                       Settings(),
                       profile(),
                     ],
@@ -967,45 +1235,29 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
   Widget homeScreen() {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     nameText.text = _userName;
     emailText.text = _userEmail;
     getSettings();
     final bool showFab = MediaQuery.of(context).viewInsets.bottom == 0.0;
     return Scaffold(
       floatingActionButton: showFab
-                  ? FloatingActionButton.extended(
+                  ? inMeeting == false
+          ? FloatingActionButton.extended(
                       heroTag: "Random Meet",
                       elevation: 5,
                       onPressed: () => inMeeting ? null : _joinRandomMeeting(),
                       icon: Icon(
-                        Icons.people_outline,
-                        color: inMeeting
-                            ? themeNotifier.getTheme() == darkTheme
-                                ? Colors.grey
-                                : Colors.white
-                            : themeNotifier.getTheme() == darkTheme
-                                ? Colors.blueAccent
-                                : Colors.white,
+                        Icons.shuffle_outlined,
+                        color: Colors.white,
                       ),
                       label: Text('Random Meet',
                           style: TextStyle(
-                              color: inMeeting
-                                  ? themeNotifier.getTheme() == darkTheme
-                                      ? Colors.grey
-                                      : Colors.white
-                                  : themeNotifier.getTheme() == darkTheme
-                                      ? Colors.blueAccent
-                                      : Colors.white,
+                              color: Colors.white,
                               fontWeight: FontWeight.bold)),
-                      backgroundColor: inMeeting
-                          ? themeNotifier.getTheme() == darkTheme
-                              ? Color(0xFF242424)
-                              : Colors.grey
-                          : themeNotifier.getTheme() == darkTheme
-                              ? Color(0xFF242424)
+                      backgroundColor:themeNotifier.getTheme() == darkTheme
+                              ? Color(0xff0184dc)
                               : Colors.blue,
-                    )
+                    ) : Container()
                   : Container(),
       body: SafeArea(
         child: Container(
@@ -1015,40 +1267,31 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
               children: <Widget>[
                 SizedBox(
                   height: 15.0,
+            ),
+                Divider(
+                  height: 1,
+                  color: themeNotifier.getTheme() == darkTheme
+                      ? Color(0xFF303030)
+                      : Colors.black12,
                 ),
-                ValueListenableBuilder(
-                    valueListenable: joinlinkname,
-                    builder: (BuildContext context, bool value, Widget child) {
-                      return Column(children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 10,
-                          ),
-                          child: TextField(
+                        TextField(
                             focusNode: myFocusNode,
-                            keyboardType: joinlinkname.value
-                                ? TextInputType.text
-                                : TextInputType.phone,
+                            keyboardType: TextInputType.number,
                             autofocus: false,
                             onChanged: (val) {
                               isEmpty();
                               istyping(roomText);
+                              restrictedIdDetect(roomText);
                             },
                             inputFormatters: [
-                              joinlinkname.value
-                                  ? FilteringTextInputFormatter.allow(
-                                      RegExp('[a-zA-Z0-9]'))
-                                  : FilteringTextInputFormatter.allow(
+                              FilteringTextInputFormatter.allow(
                                       RegExp('[0-9]')),
                             ],
                             maxLength: 11,
                             controller: roomText,
+                          textAlign: TextAlign.center,
                             decoration: InputDecoration(
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                      color: Colors.blue, width: 1.0),
-                                  borderRadius: BorderRadius.circular(15.0),
-                                ),
+                                border: InputBorder.none,
                                 counterText: '',
                                 isDense: true,
                                 filled: true,
@@ -1066,7 +1309,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                                             showRecentJoined();
                                           },
                                           icon: Icon(Icons.keyboard_arrow_down,
-                                              size: 30, color: Colors.blue),
+                                              size: 30, color: themeNotifier.getTheme() == darkTheme
+                                                  ? Colors.white : Colors.grey),
                                         ),
                                       ),
                                       Visibility(
@@ -1084,55 +1328,23 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                                       ),
                                     ]),
                                 errorText:
-                                    _idError ? 'Invalid Meeting Id' : null,
-                                border: OutlineInputBorder(
-                                  borderRadius: const BorderRadius.all(
-                                    const Radius.circular(10.0),
-                                  ),
-                                ),
+                                    restrcitedIdError ? 'Invalid Meeting Id' : null,
                                 floatingLabelBehavior:
-                                    FloatingLabelBehavior.always,
-                                labelText: joinlinkname.value
-                                    ? 'Personal Link Name'
-                                    : "Meeting Id",
-                                labelStyle: TextStyle(
-                                  color: Colors.blue,
-                                ),
+                                    FloatingLabelBehavior.never,
                                 fillColor: themeNotifier.getTheme() == darkTheme
                                     ? Color(0xFF191919)
                                     : Color(0xFFf9f9f9),
-                                hintText: joinlinkname.value
-                                    ? 'Personal Link Name'
-                                    : 'Meeting Id'),
+                                hintText: 'Meeting Id'),
                           ),
-                        ),
+                Divider(
+                  height: 1,
+                  color: themeNotifier.getTheme() == darkTheme
+                      ? Color(0xFF303030)
+                      : Colors.black12,
+                ),
                         SizedBox(
                           height: 10,
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                joinchanged();
-                              },
-                              child: Text(
-                                joinlinkname.value
-                                    ? 'Join with Meeting ID'
-                                    : 'Join with Personal Link Name',
-                                style: TextStyle(
-                                    color: themeNotifier.getTheme() == darkTheme
-                                        ? Colors.blueAccent
-                                        : Colors.blue,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            )
-                          ],
-                        ),
-                      ]);
-                    }),
                 SizedBox(
                   height: 20.0,
                 ),
@@ -1158,44 +1370,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                       ? Color(0xFF303030)
                       : Colors.black12,
                 ),
-                ListTile(
-                  tileColor: themeNotifier.getTheme() == darkTheme
-                      ? Color(0xFF191919)
-                      : Color(0xFFf9f9f9),
-                  title: Text(
-                    "Audio Only",
-                    style: TextStyle(
-                      fontSize: 16,
-                    ),
-                  ),
-                  dense: true,
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                  trailing: Transform.scale(
-                    scale: 0.8,
-                    child: CupertinoSwitch(
-                      value: isAudioOnly,
-                      onChanged: _onAudioOnlyChanged,
-                    ),
-                  ),
-                ),
-                Divider(
-                  height: 1,
-                  color: themeNotifier.getTheme() == darkTheme
-                      ? Color(0xFF303030)
-                      : Colors.black12,
-                  indent: 15,
-                  endIndent: 0,
-                ),
-                ListTile(
-                  tileColor: themeNotifier.getTheme() == darkTheme
-                      ? Color(0xFF191919)
-                      : Color(0xFFf9f9f9),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(10),
-                        bottomRight: Radius.circular(10)),
-                  ),
+              CupertinoSwitchListTile(
                   title: Text(
                     "Audio Muted",
                     style: TextStyle(
@@ -1203,14 +1378,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                     ),
                   ),
                   dense: true,
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                  trailing: Transform.scale(
-                      scale: 0.8,
-                      child: CupertinoSwitch(
-                        value: isAudioMuted,
-                        onChanged: _onAudioMutedChanged,
-                      )),
+                value: isAudioMuted,
+                onChanged: _onAudioMutedChanged,
                 ),
                 Divider(
                   height: 1,
@@ -1220,16 +1389,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                   indent: 15,
                   endIndent: 0,
                 ),
-                ListTile(
-                  tileColor: themeNotifier.getTheme() == darkTheme
-                      ? Color(0xFF191919)
-                      : Color(0xFFf9f9f9),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(10),
-                        bottomRight: Radius.circular(10)),
-                  ),
-                  focusColor: Colors.blue,
+                CupertinoSwitchListTile(
                   title: Text(
                     "Video Muted",
                     style: TextStyle(
@@ -1237,15 +1397,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                     ),
                   ),
                   dense: true,
-                  contentPadding:
-                      EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                  trailing: Transform.scale(
-                    scale: 0.8,
-                    child: CupertinoSwitch(
-                      value: isVideoMuted,
-                      onChanged: _onVideoMutedChanged,
-                    ),
-                  ),
+                  value: isVideoMuted,
+                  onChanged: _onVideoMutedChanged,
                 ),
                 Divider(
                   height: 1,
@@ -1268,6 +1421,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                       fontSize: 16,
                     ),
                   ),
+                  subtitle: Text('Profile picture, Low bandwidth mode', overflow: TextOverflow.ellipsis,),
                   contentPadding:
                       EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
                   trailing: Row(
@@ -1289,10 +1443,10 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                       : Colors.black12,
                 ),
                 SizedBox(
-                  height: 40.0,
+                  height: 30.0,
                 ),
                 SizedBox(
-                  height: 45.0,
+                  height: 50.0,
                   width: MediaQuery.of(context).size.width * 0.90,
                   child: RaisedButton(
                     disabledColor: themeNotifier.getTheme() == darkTheme
@@ -1322,7 +1476,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                           TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
                     ),
                     color: themeNotifier.getTheme() == darkTheme
-                        ? Colors.blueAccent
+                        ? Color(0xff0184dc)
                         : Colors.blue,
                   ),
                 ),
@@ -1341,9 +1495,9 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                   )
                 ]),
               ],
-            ),
           ),
         ),
+      ),
       ),
     );
   }
@@ -1361,9 +1515,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                     builder: (context) => profilePage(
                           name: _userName,
                           email: _userEmail,
-                          pmeet: PmeetingId,
                           photoURL: _userPhotoUrl,
-                          linkName: linkName,
                         ))),
             child: Container(
               alignment: Alignment.center,
@@ -1384,7 +1536,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                     child: CachedNetworkImage(
                       imageUrl: _userPhotoUrl,
                       placeholder: (context, url) =>
-                          CircularProgressIndicator(),
+                          CupertinoActivityIndicator(animating: true, ),
                       errorWidget: (context, url, error) => Icon(Icons.person),
                       imageBuilder: (context, imageProvider) => Container(
                           width: 40,
@@ -1438,7 +1590,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                     bottomRight: Radius.circular(30))),
             leading: Stack(
               children: [
-                Icon(Icons.notifications),
+                Icon(Icons.notifications_none_outlined),
                 Positioned(
                   left: 16,
                   child: Icon(
@@ -1464,7 +1616,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                   borderRadius: BorderRadius.only(
                       topRight: Radius.circular(30),
                       bottomRight: Radius.circular(30))),
-              leading: Icon(Icons.feedback),
+              leading: Icon(Icons.feedback_outlined),
               title: Text(
                 'Send Feedback',
                 overflow: TextOverflow.ellipsis,
@@ -1482,7 +1634,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                   borderRadius: BorderRadius.only(
                       topRight: Radius.circular(30),
                       bottomRight: Radius.circular(30))),
-              leading: Icon(Icons.report),
+              leading: Icon(Icons.report_outlined),
               title: Text(
                 'Report Abuse',
                 overflow: TextOverflow.ellipsis,
@@ -1500,9 +1652,9 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                 borderRadius: BorderRadius.only(
                     topRight: Radius.circular(30),
                     bottomRight: Radius.circular(30))),
-            leading: Icon(Icons.help),
+            leading: Icon(Icons.help_outline),
             title: Text(
-              'Help',
+              'Support',
               overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
             ),
@@ -1515,7 +1667,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                   borderRadius: BorderRadius.only(
                       topRight: Radius.circular(30),
                       bottomRight: Radius.circular(30))),
-              leading: Icon(Icons.share),
+              leading: Icon(Icons.share_outlined),
               title: Text(
                 'Invite others to Just Meet',
                 overflow: TextOverflow.ellipsis,
@@ -1530,7 +1682,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                       topRight: Radius.circular(30),
                       bottomRight: Radius.circular(30))),
               leading: Icon(
-                Icons.thumb_up_alt_sharp,
+                Icons.thumb_up_alt_outlined,
               ),
               title: Text(
                 'Rate Just Meet',
@@ -1608,7 +1760,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
   Widget Settings() {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -1632,6 +1783,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                       fontSize: 16,
                     ),
                   ),
+                  subtitle: Text('Version, Dark mode, Diagnostic info', overflow: TextOverflow.ellipsis,),
                   contentPadding:
                       EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
                   trailing: Row(
@@ -1669,6 +1821,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                       fontSize: 16,
                     ),
                   ),
+                  subtitle: Text('Joining, Hosting, Global meet, Random meet settings', overflow: TextOverflow.ellipsis,),
                   contentPadding:
                       EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
                   trailing: Row(
@@ -1706,6 +1859,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                       fontSize: 16,
                     ),
                   ),
+                  subtitle: Text('Enhance voice, Skin tone, Lighting, Video quality...', overflow: TextOverflow.ellipsis,),
                   contentPadding:
                       EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
                   trailing: Row(
@@ -1846,7 +2000,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                 ),
                 Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Text(
-                    'Copyright ©2020 Jagadish Prasad Pattanaik. All rights reserved.',
+                    'Copyright ©2020 Just Technologies. All rights reserved.',
                     style: TextStyle(color: Colors.grey, fontSize: 11),
                     textAlign: TextAlign.center,
                     overflow: TextOverflow.ellipsis,
@@ -1867,7 +2021,11 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
     showModalBottomSheet(
         context: context,
+        enableDrag: true,
+        isDismissible: true,
+        elevation: 5,
         isScrollControlled: true,
+        //transitionAnimationController: animecontroller,
         backgroundColor: themeNotifier.getTheme() == darkTheme
             ? Color(0xFF242424)
             : Colors.white,
@@ -1890,9 +2048,10 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                 backgroundColor: themeNotifier.getTheme() == darkTheme
                     ? Color(0xFF191919)
                     : Colors.white,
-                elevation: 5,
+                elevation: 0,
+                centerTitle: true,
                 leading: IconButton(
-                  icon: Icon(Icons.clear),
+                  icon: Icon(Icons.keyboard_arrow_down_rounded),
                   onPressed: () {
                     Navigator.pop(context);
                   },
@@ -1916,31 +2075,18 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: themeNotifier.getTheme() == darkTheme
-                        ? Colors.white
-                        : Colors.black,
+                        ? Colors.white : Colors.black54,
                   ),
                 ),
               ),
               body: SafeArea(
                 child: Container(
                   child: items.isEmpty
-                      ? Center(
-                          child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                              Image(
-                                  image: AssetImage('assets/images/clock.png')),
-                              SizedBox(
-                                height: 10,
-                              ),
-                              Text(
-                                'No Recent Meetings',
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    color: Colors.grey,
-                                    fontWeight: FontWeight.bold),
-                              )
-                            ]))
+                      ? QuietBox(
+                    heading: "This is where all your recently joined meetings are listed",
+                    subtitle:
+                    "There are no recently joined meetings, join one now",
+                  )
                       : Container(
                           height: double.maxFinite,
                           width: double.maxFinite,
@@ -2095,69 +2241,11 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                                     },
                                     child: ListTile(
                                       onTap: () {
-                                        setState(() {
-                                          roomText.text =
-                                              '${items[position].description}';
-                                          subjectText.text =
-                                              '${items[position].title}';
-                                        });
-                                        isEmpty();
-                                        Navigator.of(context,
-                                                rootNavigator: true)
-                                            .pop();
-                                        items[position].host == _userEmail
-                                            ? _hostRecentMeeting(
-                                                items[position].chatEnabled == 1
-                                                    ? true
-                                                    : false,
-                                                items[position].liveEnabled == 1
-                                                    ? true
-                                                    : false,
-                                                items[position].raiseEnabled ==
-                                                        1
-                                                    ? true
-                                                    : false,
-                                                items[position].recordEnabled ==
-                                                        1
-                                                    ? true
-                                                    : false,
-                                                items[position]
-                                                            .shareYtEnabled ==
-                                                        1
-                                                    ? true
-                                                    : false,
-                                                items[position]
-                                                            .kickOutEnabled ==
-                                                        1
-                                                    ? true
-                                                    : false,
-                                                items[position].host)
-                                            : _joinRecentMeeting(
-                                                items[position].chatEnabled == 1
-                                                    ? true
-                                                    : false,
-                                                items[position].liveEnabled == 1
-                                                    ? true
-                                                    : false,
-                                                items[position].raiseEnabled ==
-                                                        1
-                                                    ? true
-                                                    : false,
-                                                items[position].recordEnabled ==
-                                                        1
-                                                    ? true
-                                                    : false,
-                                                items[position]
-                                                            .shareYtEnabled ==
-                                                        1
-                                                    ? true
-                                                    : false,
-                                                items[position]
-                                                            .kickOutEnabled ==
-                                                        1
-                                                    ? true
-                                                    : false,
-                                                items[position].host);
+                                        Navigator.pop(context);
+                                        Navigator.push(
+                                            context,
+                                            CupertinoPageRoute(
+                                                builder: (context) => meetDetails(db: 'join', num: position, name: _userName, email: _userEmail, PhotoUrl: _userPhotoUrl, uid: _userUid, items: items,)));
                                       },
                                       visualDensity: VisualDensity(
                                           horizontal: 0, vertical: -4),
@@ -2224,8 +2312,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
   Widget scheduleMeeting() {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
-    getPInfo();
     db2.getAllNotes2().then((notes2) {
       setState(() {
         items2.clear();
@@ -2237,242 +2323,19 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     checkInvalid();
     return Scaffold(
       body: SafeArea(
-        child: SmartRefresher(
-          enablePullDown: true,
-          enablePullUp: false,
-          header: WaterDropMaterialHeader(
-            color: Colors.white,
-            backgroundColor: themeNotifier.getTheme() == darkTheme
-                ? Color(0xFF242424)
-                : Colors.blue,
-          ),
-          controller: _refreshController,
-          onRefresh: _onRefresh,
-          onLoading: _onLoading,
-          child: Container(
-            height: double.maxFinite,
-            width: double.maxFinite,
-            child: SingleChildScrollView(
-              child: Column(children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.only(top: 5),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(15)),
-                    child: Container(
-                      padding: EdgeInsets.all(0),
-                      height: 120,
-                      width: double.maxFinite,
-                      //color: Colors.white,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Text(
-                            'Personal Meeting ID',
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 15,
-                            ),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                PmeetingId,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    //color: Colors.black,
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              RaisedButton(
-                                elevation: 5,
-                                color: inMeeting
-                                    ? themeNotifier.getTheme() == darkTheme
-                                        ? Color(0xFF121212)
-                                        : Colors.grey
-                                    : themeNotifier.getTheme() == darkTheme
-                                        ? Color(0xFF242424)
-                                        : Colors.green,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10.0),
-                                ),
-                                child: Text(
-                                  'Start',
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color:
-                                        inMeeting ? Colors.grey : Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                onPressed: inMeeting
-                                    ? null
-                                    : () async {
-                                        var connectivityResult =
-                                            await (Connectivity()
-                                                .checkConnectivity());
-                                        if (connectivityResult ==
-                                            ConnectivityResult.none) {
-                                          Fluttertoast.showToast(
-                                              msg: 'No Internet Connection!',
-                                              toastLength: Toast.LENGTH_SHORT,
-                                              gravity: ToastGravity.SNACKBAR,
-                                              timeInSecForIosWeb: 1,
-                                              backgroundColor: Colors.black,
-                                              textColor: Colors.white,
-                                              fontSize: 16.0);
-                                        } else {
-                                          var dynamicLink =
-                                              await createDynamicLink(
-                                                  meet: PmeetingId,
-                                                  sub: PmeetName,
-                                                  ch: PchatEnabled.toString(),
-                                                  rh: PraiseEnabled.toString(),
-                                                  rm: PrecordEnabled.toString(),
-                                                  ls: PliveEnabled.toString(),
-                                                  yt: PshareYtEnabled
-                                                      .toString(),
-                                                  ko: PKickOutEnabled
-                                                      .toString(),
-                                                  host: _userEmail);
-                                          var dynamicWeb = webLink + PmeetingId;
-                                          final action =
-                                              await Dialogs.yesAbortDialog(
-                                                  context,
-                                                  'Invite Others',
-                                                  'Invite Others to the meeting',
-                                                  'Invite Others',
-                                                  'Start Meeting');
-                                          if (action == DialogAction.yes) {
-                                            _sharePMI(
-                                                PmeetingId,
-                                                PmeetName,
-                                                dynamicLink.toString(),
-                                                dynamicWeb);
-                                          }
-                                          if (action == DialogAction.no) {
-                                            useAvatar == true
-                                                ? _hostPersonalMeeting()
-                                                : _hostPersonalMeetingNoAvatar();
-                                          }
-                                        }
-                                      },
-                              ),
-                              RaisedButton(
-                                  elevation: 5,
-                                  color: themeNotifier.getTheme() == darkTheme
-                                      ? Color(0xFF242424)
-                                      : Colors.blue,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10.0),
-                                  ),
-                                  child: Text(
-                                    'Send Invitation',
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  onPressed: () async {
-                                    var connectivityResult =
-                                        await (Connectivity()
-                                            .checkConnectivity());
-                                    if (connectivityResult ==
-                                        ConnectivityResult.none) {
-                                      Fluttertoast.showToast(
-                                          msg: 'No Internet Connection!',
-                                          toastLength: Toast.LENGTH_SHORT,
-                                          gravity: ToastGravity.SNACKBAR,
-                                          timeInSecForIosWeb: 1,
-                                          backgroundColor: Colors.black,
-                                          textColor: Colors.white,
-                                          fontSize: 16.0);
-                                    } else {
-                                      var dynamicLink = await createDynamicLink(
-                                          meet: PmeetingId,
-                                          sub: PmeetName,
-                                          ch: PchatEnabled.toString(),
-                                          rh: PraiseEnabled.toString(),
-                                          rm: PrecordEnabled.toString(),
-                                          ls: PliveEnabled.toString(),
-                                          yt: PshareYtEnabled.toString(),
-                                          ko: PKickOutEnabled.toString(),
-                                          host: _userEmail);
-                                      var dynamicWeb = webLink + PmeetingId;
-                                      print("Dynamic Link: $dynamicLink");
-                                      _sharePMI(PmeetingId, PmeetName,
-                                          dynamicLink.toString(), dynamicWeb);
-                                    }
-                                  }),
-                              RaisedButton(
-                                  elevation: 5,
-                                  color: themeNotifier.getTheme() == darkTheme
-                                      ? Color(0xFF242424)
-                                      : Colors.deepOrange,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10.0),
-                                  ),
-                                  child: Text(
-                                    'Edit',
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  onPressed: () {
-                                    getPInfo();
-                                    Navigator.push(
-                                        context,
-                                        CupertinoPageRoute(
-                                            builder: (context) => editPersonal(
-                                                chat: PchatEnabled,
-                                                live: PliveEnabled,
-                                                record: PrecordEnabled,
-                                                raise: PraiseEnabled,
-                                                id: PmeetingId,
-                                                name: PmeetName,
-                                                ytshare: PshareYtEnabled,
-                                                kick: PKickOutEnabled)));
-                                  }),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Divider(
-                  height: 1,
-                  color: themeNotifier.getTheme() == darkTheme
-                      ? Color(0xFF303030)
-                      : Colors.black12,
-                ),
-                items2.isEmpty
-                    ? Padding(
-                        padding: EdgeInsets.only(top: 100),
-                        child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Image(
-                                  image:
-                                      AssetImage('assets/images/schedule.png')),
-                              Text(
-                                'No Scheduled Meetings',
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey),
-                              )
-                            ]))
-                    : ListView.separated(
+        child: items2.isEmpty
+            ? Container(
+        child: QuietBox(
+          heading: "This is where all your scheduled meetings are listed",
+          subtitle:
+          "There are no schedule a meetings, schedule one for future now",
+        )
+        )
+            : Container(
+          height: double.maxFinite,
+            child: Column(
+                  children: <Widget>[
+               ListView.separated(
                         shrinkWrap: true,
                         itemCount: items2.length,
                         itemBuilder: (BuildContext context, int position) {
@@ -2618,133 +2481,10 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                               ),
                               trailing: Padding(
                                 padding: EdgeInsets.only(right: 5),
-                                child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: <Widget>[
-                                      Text(
+                                child: Text(
                                         finalDate,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                      SizedBox(
-                                        width: 10,
-                                      ),
-                                      SizedBox(
-                                        width: 70, // specific value
-                                        child: RaisedButton(
-                                          elevation: 3,
-                                          textColor: Colors.white,
-                                          color: inMeeting
-                                              ? themeNotifier.getTheme() ==
-                                                      darkTheme
-                                                  ? Color(0xFF121212)
-                                                  : Colors.grey
-                                              : themeNotifier.getTheme() ==
-                                                      darkTheme
-                                                  ? Color(0xFF242424)
-                                                  : Colors.blue,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(15.0),
-                                          ),
-                                          onLongPress: () => null,
-                                          onPressed: inMeeting
-                                              ? null
-                                              : () async {
-                                                  var connectivityResult =
-                                                      await (Connectivity()
-                                                          .checkConnectivity());
-                                                  if (connectivityResult ==
-                                                      ConnectivityResult.none) {
-                                                    Fluttertoast.showToast(
-                                                        msg:
-                                                            'No Internet Connection!',
-                                                        toastLength:
-                                                            Toast.LENGTH_SHORT,
-                                                        gravity: ToastGravity
-                                                            .SNACKBAR,
-                                                        timeInSecForIosWeb: 1,
-                                                        backgroundColor:
-                                                            Colors.black,
-                                                        textColor: Colors.white,
-                                                        fontSize: 16.0);
-                                                  } else {
-                                                    var dynamicLink =
-                                                        await createDynamicLink(
-                                                            meet:
-                                                                items2[position]
-                                                                    .description2
-                                                                    .replaceAll(
-                                                                        RegExp(
-                                                                            r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'),
-                                                                        ""),
-                                                            sub:
-                                                                '${items2[position].title2}',
-                                                            ch: SchatEnabled
-                                                                .toString(),
-                                                            rh: SraiseEnabled
-                                                                .toString(),
-                                                            rm: SrecordEnabled
-                                                                .toString(),
-                                                            ls: SliveEnabled
-                                                                .toString(),
-                                                            yt: SshareYtEnabled
-                                                                .toString(),
-                                                            ko: SKickOutEnabled
-                                                                .toString(),
-                                                            host: _userEmail);
-                                                    var dynamicWeb = webLink +
-                                                        items2[position]
-                                                            .description2
-                                                            .replaceAll(
-                                                                RegExp(
-                                                                    r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'),
-                                                                "");
-                                                    final action = await Dialogs
-                                                        .yesAbortDialog(
-                                                            context,
-                                                            'Invite Others',
-                                                            'Invite Others to the meeting',
-                                                            'Invite Others',
-                                                            'Start Meeting');
-                                                    if (action ==
-                                                        DialogAction.yes) {
-                                                      _shareScheduledMeeting(
-                                                          '${items2[position].description2}',
-                                                          '${items2[position].title2}',
-                                                          dynamicLink
-                                                              .toString(),
-                                                          dynamicWeb,
-                                                          finalDate,
-                                                          time,
-                                                          timeTo);
-                                                    }
-                                                    if (action ==
-                                                        DialogAction.no) {
-                                                      setState(() {
-                                                        hostRoomText.text =
-                                                            '${items2[position].description2}';
-                                                        hostSubjectText.text =
-                                                            '${items2[position].title2}';
-                                                      });
-                                                      useAvatar == true
-                                                          ? _hostScheduledMeeting()
-                                                          : _hostScheduledMeetingNoAvatar();
-                                                    }
-                                                  }
-                                                },
-                                          child: Text(
-                                            'Start',
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                                color: inMeeting
-                                                    ? Colors.grey
-                                                    : Colors.white,
-                                                fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                      ),
-                                    ]),
                               ),
                               title: Text(
                                 '${items2[position].title2}',
@@ -2778,23 +2518,19 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                             ? Color(0xFF242424)
                             : Colors.black12,
                       )
-                    : Container(),
+                    : Container(height: 0,),
               ]),
             ),
           ),
-        ),
-      ),
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: themeNotifier.getTheme() == darkTheme
-            ? Color(0xFF242424)
+            ? Color(0xff0184dc)
             : Colors.blue,
         elevation: 5,
         heroTag: "Schedule",
         icon: Icon(
-          Icons.add,
-          color: themeNotifier.getTheme() == darkTheme
-              ? Colors.blueAccent
-              : Colors.white,
+          Icons.schedule_outlined,
+          color: Colors.white,
           size: 30,
         ),
         onPressed: () => _createNewNote(context),
@@ -2802,19 +2538,120 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
           'Schedule',
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-              color: themeNotifier.getTheme() == darkTheme
-                  ? Colors.blueAccent
-                  : Colors.white,
+              color: Colors.white,
               fontWeight: FontWeight.bold),
         ),
       ),
     );
   }
 
+  Widget liveMeeting() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+    final bool showFab = MediaQuery.of(context).viewInsets.bottom == 0.0;
+    return Scaffold(
+      floatingActionButton: showFab
+          ? inMeeting == false
+          ? FloatingActionButton.extended(
+        heroTag: "Global Meet",
+        elevation: 5,
+        onPressed:  ()
+    {
+      liveMeetTopic.clear();
+      _displayDialog();
+    },
+          icon: Icon(
+            Icons.add,
+            color: Colors.white,
+          ),
+        label: Text('Global Meet',
+            style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold)),
+        backgroundColor: themeNotifier.getTheme() == darkTheme
+            ? Color(0xff0184dc)
+            : Colors.blue,
+      ) : Container()
+          : Container(),
+        body: SafeArea(
+        child: liveMeets.isEmpty
+        ?
+            Container(
+        child: QuietBox(
+        heading: "This is where you can find all global live meetings",
+        subtitle:
+        "There are no global meetings live now, host one and let people join you",
+    )
+            )
+        : SmartRefresher(
+    enablePullDown: true,
+    enablePullUp: false,
+    header: ClassicHeader(),
+    controller: _refreshController,
+    onRefresh: _onRefresh,
+    onLoading: _onLoading,
+    child: ListView.separated(
+            itemCount: liveMeets.length,
+        separatorBuilder: (BuildContext context, int index) {
+          return SizedBox(height: 10,); },
+        itemBuilder: (context, position) {
+          return
+              Card(
+            elevation: 0,
+            color: themeNotifier.getTheme() == darkTheme
+                ? Color(0xFF242424)
+                : Color(0xFFEFEFEF),
+            margin: const EdgeInsets.symmetric(horizontal: 10),
+            child: SafeArea(
+              child:
+              ListTile(
+                title: Text(liveMeets[position].topic),
+                subtitle: liveMeets[position].host != _userName ? Text( 'Hosted by ' + liveMeets[position].host + ', ' + 'started at ' + liveMeets[position].started) : Text('Hosted by You at ' + liveMeets[position].started),
+                contentPadding: EdgeInsets.only(top: 0, bottom: 0, left: 10),
+                onTap:  () {
+                  if (inMeeting == false) {
+                      if (liveMeets[position].host != _userEmail) {
+                        Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                                builder: (context) =>
+                                    LiveDetails(id: liveMeets[position].meetId,
+                                      topic: liveMeets[position].topic,
+                                      host: liveMeets[position].host,
+                                      name: _userName,
+                                      uid: _userUid,
+                                      email: _userEmail,
+                                      PhotoUrl: _userPhotoUrl,
+                                      ch: liveMeets[position].chatEnabled,
+                                      raise: liveMeets[position].raiseEnabled,
+                                      record: liveMeets[position].recordEnabled,
+                                      live: liveMeets[position].liveEnabled,
+                                      yt: liveMeets[position].shareYtEnabled,
+                                      kick: liveMeets[position].kickEnabled,
+                                      started: liveMeets[position].started,)));
+                      }
+                  }  else {
+                    Fluttertoast.showToast(
+                        msg: 'Already in a meeting',
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.SNACKBAR,
+                        timeInSecForIosWeb: 1,
+                        backgroundColor: Colors.black,
+                        textColor: Colors.white,
+                        fontSize: 16.0);
+                  }
+                }
+              ),
+            ),
+              );
+        })
+    ),
+        ),
+    );
+  }
+
   Widget profile() {
     final GoogleSignIn _gSignIn = GoogleSignIn();
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -2836,7 +2673,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                     child: CachedNetworkImage(
                       imageUrl: _userPhotoUrl,
                       placeholder: (context, url) =>
-                          CircularProgressIndicator(),
+                          CupertinoActivityIndicator(animating: true, ),
                       errorWidget: (context, url, error) => Icon(Icons.person),
                       imageBuilder: (context, imageProvider) => Container(
                           width: 40,
@@ -2851,7 +2688,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                   ),
                   title: Text(
                     'Profile Photo',
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Divider(
@@ -2867,10 +2703,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                       ? Color(0xFF191919)
                       : Color(0xFFf9f9f9),
                   title: Text('Account'),
-                  trailing: Text(
-                    _userEmail,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  trailing: Text(_userEmail),
                 ),
                 Divider(
                   height: 1,
@@ -2885,10 +2718,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                       ? Color(0xFF191919)
                       : Color(0xFFf9f9f9),
                   title: Text('Display Name'),
-                  trailing: Text(
-                    _userName,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  trailing: Text(_userName),
                 ),
                 Divider(
                   height: 1,
@@ -2909,138 +2739,19 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                   tileColor: themeNotifier.getTheme() == darkTheme
                       ? Color(0xFF191919)
                       : Color(0xFFf9f9f9),
-                  onLongPress: () =>
-                      Clipboard.setData(new ClipboardData(text: PmeetingId))
-                          .then((_) {
-                    Fluttertoast.showToast(
-                        msg: 'PMI copied to clipboard',
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.SNACKBAR,
-                        timeInSecForIosWeb: 1,
-                        backgroundColor: Colors.black,
-                        textColor: Colors.white,
-                        fontSize: 16.0);
-                  }),
-                  title: Text(
-                    'Personal Meeting ID',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          PmeetingId,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(
-                          width: 5,
-                        ),
-                        GestureDetector(
-                          onTap: () => Clipboard.setData(
-                                  new ClipboardData(text: PmeetingId))
-                              .then((_) {
-                            Fluttertoast.showToast(
-                                msg: 'PMI copied to clipboard',
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.SNACKBAR,
-                                timeInSecForIosWeb: 1,
-                                backgroundColor: Colors.black,
-                                textColor: Colors.white,
-                                fontSize: 16.0);
-                          }),
-                          child: Icon(
-                            Icons.copy_outlined,
-                            size: 15,
-                          ),
-                        ),
-                      ]),
-                ),
-                Divider(
-                  height: 1,
-                  color: themeNotifier.getTheme() == darkTheme
-                      ? Color(0xFF303030)
-                      : Colors.black12,
-                  indent: 15,
-                  endIndent: 0,
-                ),
-                ListTile(
-                  onLongPress: () =>
-                      Clipboard.setData(new ClipboardData(text: linkName))
-                          .then((_) {
-                    Fluttertoast.showToast(
-                        msg: 'Personal Link Name copied to clipboard',
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.SNACKBAR,
-                        timeInSecForIosWeb: 1,
-                        backgroundColor: Colors.black,
-                        textColor: Colors.white,
-                        fontSize: 16.0);
-                  }),
-                  tileColor: themeNotifier.getTheme() == darkTheme
-                      ? Color(0xFF191919)
-                      : Color(0xFFf9f9f9),
-                  title: Text(
-                    'Personal Link Name',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          linkName,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        SizedBox(
-                          width: 5,
-                        ),
-                        GestureDetector(
-                          onTap: () => Clipboard.setData(
-                                  new ClipboardData(text: linkName))
-                              .then((_) {
-                            Fluttertoast.showToast(
-                                msg: 'Personal Link Name copied to clipboard',
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.SNACKBAR,
-                                timeInSecForIosWeb: 1,
-                                backgroundColor: Colors.black,
-                                textColor: Colors.white,
-                                fontSize: 16.0);
-                          }),
-                          child: Icon(
-                            Icons.copy_outlined,
-                            size: 15,
-                          ),
-                        ),
-                      ]),
-                ),
-                Divider(
-                  height: 1,
-                  color: themeNotifier.getTheme() == darkTheme
-                      ? Color(0xFF303030)
-                      : Colors.black12,
-                ),
-                SizedBox(
-                  height: 25,
-                ),
-                Divider(
-                  height: 1,
-                  color: themeNotifier.getTheme() == darkTheme
-                      ? Color(0xFF303030)
-                      : Colors.black12,
-                ),
-                ListTile(
-                  tileColor: themeNotifier.getTheme() == darkTheme
-                      ? Color(0xFF191919)
-                      : Color(0xFFf9f9f9),
-                  title: Text(
-                    'Plan',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: Text(
-                    'Free',
-                    overflow: TextOverflow.ellipsis,
+                  title: Text('Plan'),
+                  subtitle: Text('Free'),
+                  onTap: () =>  Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                          builder: (context) => Information(
+                            text: 'Completely free and unlimited plan. Neither ads are shown nor your user data is sold for profit. Your love and support is our greatest motivation.',
+                            title: 'Plan',
+                          ))),
+                  trailing: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 20,
+                    color: Colors.grey,
                   ),
                 ),
                 Divider(
@@ -3056,9 +2767,18 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                       ? Color(0xFF191919)
                       : Color(0xFFf9f9f9),
                   title: Text('License'),
-                  trailing: Text(
-                    'Unlimited Time and Participants',
-                    overflow: TextOverflow.ellipsis,
+                  subtitle: Text('Unlimited Time and Participants'),
+                  onTap: () =>  Navigator.push(
+                      context,
+                      CupertinoPageRoute(
+                          builder: (context) => Information(
+                            text: "You have been given unlimited meeting time and participants number without compromising quality and security. Your meetings are encrypted even Just Meet can't see them. So enjoy your unlimited free meetings.",
+                            title: 'License',
+                          ))),
+                  trailing: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 20,
+                    color: Colors.grey,
                   ),
                 ),
                 Divider(
@@ -3093,22 +2813,14 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                       Navigator.of(context).pushAndRemoveUntil(
                         CupertinoPageRoute(
                             builder: (BuildContext context) => LoginScreen()),
-                        (Route<dynamic> route) => false,
+                            (Route<dynamic> route) => false,
                       );
-                      Fluttertoast.showToast(
-                          msg: 'Signed Out',
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.SNACKBAR,
-                          timeInSecForIosWeb: 1,
-                          backgroundColor: Colors.black,
-                          textColor: Colors.white,
-                          fontSize: 16.0);
+                      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('Signed Out',)));
                     }
                     if (action == DialogAction.abort) {}
                   },
                   title: Text(
                     'Sign Out',
-                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                         color: Colors.red, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
@@ -3131,6 +2843,61 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     );
   }
 
+  _displayDialog() async {
+    bool start = false;
+    final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return Theme(
+            data: themeNotifier.getTheme(),
+            child: StatefulBuilder(
+                builder: (context, setState) {
+                  return AlertDialog(
+                    title: Text('New Global Live Meeting'),
+                    elevation: 5,
+                    content: TextField(
+                      controller: liveMeetTopic,
+                      textInputAction: TextInputAction.go,
+                      textAlign: TextAlign.center,
+                      onChanged: (val) {
+                        restrictedTopicDetect(liveMeetTopic);
+                        hateDetect(liveMeetTopic);
+                        if (liveMeetTopic.text.length > 3) {
+                          setState(() {
+                            start = true;
+                          });
+                        } else if (liveMeetTopic.text.length < 3) {
+                          setState(() {
+                            start = false;
+                          });
+                        }
+                      },
+                      keyboardType: TextInputType.text,
+                      decoration: InputDecoration(hintText: "Meeting Topic",
+                          errorText: restrcitedTopicError ? "Can't use this meeting topic" : hateError ? 'Hate speech detected!' : null),
+                    ),
+                    actions: <Widget>[
+                      new TextButton(
+                        child: new Text('Start',
+                          style: TextStyle(color: start
+                              ? Colors.blue
+                              : Colors.grey),),
+                        onPressed: start ? () {
+                          var mid = randomNumeric(11);
+                          Navigator.pop(context);
+                          _hostLiveMeeting(
+                              mid, liveMeetTopic.text, liveMeets.length);
+                        } : null,
+                      )
+                    ],
+                  );
+                }
+            ),
+          );
+        });
+  }
+
   _share() {
     final textshare =
         "$_userName is already on Just Meet and is inviting you to join Just Meet."
@@ -3141,18 +2908,35 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
         "\n"
         "Download and Join Just Meet video conference now and enjoy quality and security like no other and never before."
         "\n"
-        "Download from Play Store: https://play.google.com/store/apps/details?id=com.jaguweb.jagu_meet"
-        "\n"
-        "See you on Just Meet..."
-        "\n"
-        "\n"
-        "Developed in India with love..."
-        "\n"
-        "Stay Safe, Stay Connected with Just Meet...";
+        "Download from Play Store: https://play.google.com/store/apps/details?id=com.jaguweb.jagu_meet";
     final RenderBox box = context.findRenderObject();
     Share.share(textshare,
         subject: "$_userName is referring you to Join Just Meet",
         sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
+  }
+
+  void _onRefresh() async{
+    // monitor network fetch
+    await Future.delayed(Duration(milliseconds: 1000));
+    // if failed,use refreshFailed()
+    _refreshController.refreshCompleted();
+  }
+
+  void _onLoading() async{
+    // monitor network fetch
+    await Future.delayed(Duration(milliseconds: 1000));
+    setState(() {
+      liveMeets = [];
+    });
+    _onMeetAddedSubscription.cancel();
+    _onMeetChangedSubscription.cancel();
+    _onMeetAddedSubscription = liveMeetReference.onChildAdded.listen(_onMeetAdded);
+    _onMeetChangedSubscription = liveMeetReference.onChildChanged.listen(_onMeetUpdated);
+    if(mounted)
+      setState(() {
+
+      });
+    _refreshController.loadComplete();
   }
 
   _launchPlay() async {
@@ -3161,14 +2945,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     if (await canLaunch(url)) {
       await launch(url);
     } else {
-      Fluttertoast.showToast(
-          msg: 'Failed...Please check your internet connection',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
+      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
     }
   }
 
@@ -3188,17 +2965,31 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       if (items2[i].repeat == 'Never') {
         if (date.isBefore(now)) {
           _deleteNote2(context, items2[i], i);
-          Fluttertoast.showToast(
-              msg: 'Scheduled meeting has expired',
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.SNACKBAR,
-              timeInSecForIosWeb: 1,
-              backgroundColor: Colors.black,
-              textColor: Colors.white,
-              fontSize: 16.0);
+          ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('Scheduled meeting has expired',)));
         } else {}
       } else {}
     }
+  }
+
+  void _onMeetAdded(Event event) {
+    setState(() {
+      liveMeets.add(new LiveMeet.fromSnapshot(event.snapshot));
+    });
+  }
+
+  void _onMeetUpdated(Event event) {
+    var oldMeetValue = liveMeets.singleWhere((meets) => meets.id == event.snapshot.key);
+    setState(() {
+      liveMeets[liveMeets.indexOf(oldMeetValue)] = new LiveMeet.fromSnapshot(event.snapshot);
+    });
+  }
+
+  void _deleteLiveMeet(BuildContext context, LiveMeet meets, int position) async {
+    await liveMeetReference.child(meets.id).remove().then((_) {
+      setState(() {
+        liveMeets.removeAt(position);
+      });
+    });
   }
 
   void _deleteNote(BuildContext context, Note note, int position) async {
@@ -3222,7 +3013,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       context,
       CupertinoPageRoute(
           builder: (context) => viewScheduled(
-                personalId: PmeetingId,
                 items: items2,
                 num: pos,
                 name: _userName,
@@ -3262,9 +3052,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                 1,
                 1,
                 0),
-            PmeetingId),
       ),
-    );
+    ));
 
     if (result == 'save') {
       db2.getAllNotes2().then((notes2) {
@@ -3292,7 +3081,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   }
 
   var linkImageUrl = Uri.parse(
-      'https://play-lh.googleusercontent.com/1UPWJehjpgF1SfEccYtNzxHY7U9WAeCqwKx_UnRh-DrrP-NcN2bmjQMI5Ig1o-5xZRTT=s180-rw');
+      'https://play-lh.googleusercontent.com/7ZrxSsCqSNb86h57pPlJ3budCKTTZrCDSB3aq1F-srZnhO4M1iNtCXaM7fvxuJU3Yg=s180-rw');
   var urlLinkTitle = 'Join Just Meet Video Conference';
   var urlLinkDescription =
       'Just Meet is the leader in video conferences, with easy, secured, encrypted and reliable video and audio conferencing, chat, screen sharing and webinar across mobile and desktop. Unlimited participants and time with low bandwidth mode. Join Just Meet Video Conference now and enjoy high quality video conferences with security like no other. Stay Safe and Stay Connected with Just Meet. Developed in India with love.';
@@ -3320,6 +3109,11 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
         campaign: 'Video Conference',
         medium: 'Social',
         source: 'Just Meet',
+      ),
+      iosParameters: IosParameters(
+        bundleId: '...',
+        fallbackUrl: Uri.parse('https://jmeet-8e163.web.app/'),
+        ipadFallbackUrl: Uri.parse('https://jmeet-8e163.web.app/'),
       ),
       socialMetaTagParameters: SocialMetaTagParameters(
         imageUrl: linkImageUrl,
@@ -3496,9 +3290,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     String serverUrl =
         serverText.text?.trim()?.isEmpty ?? "" ? null : serverText.text;
 
-    setState(() {
-      roomText.text.length >= 10 ? _idError = false : _idError = true;
-    });
     Map<FeatureFlagEnum, bool> featureFlags = {};
     try {
       if (Platform.isAndroid) {
@@ -3611,7 +3402,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                 }
               }
               db.saveNote(Note(
-                  '',
+                  'Just Meet',
                   roomText.text,
                   DateTime.now().subtract(Duration(seconds: 2)).toString(),
                   1,
@@ -3646,8 +3437,24 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
               meetFeedback();
               debugPrint("${options.room} terminated with message: $message");
             }, onPictureInPictureWillEnter: (message) {
+              Fluttertoast.showToast(
+                  msg: 'To return to meeting, open Just Meet',
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.SNACKBAR,
+                  timeInSecForIosWeb: 1,
+                  backgroundColor: Colors.black,
+                  textColor: Colors.white,
+                  fontSize: 16.0);
               debugPrint(
                   "${options.room} entered PIP mode with message: $message");
+              Fluttertoast.showToast(
+                  msg: 'To return to meeting, open Just Meet',
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.SNACKBAR,
+                  timeInSecForIosWeb: 1,
+                  backgroundColor: Colors.black,
+                  textColor: Colors.white,
+                  fontSize: 16.0);
             }, onPictureInPictureTerminated: (message) {
               debugPrint(
                   "${options.room} exited PIP mode with message: $message");
@@ -3673,9 +3480,161 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     }
   }
 
+  _hostLiveMeeting(String id, String topic, int position) async {
+    String serverUrl =
+    serverText.text?.trim()?.isEmpty ?? "" ? null : serverText.text;
+
+    try {
+      Map<FeatureFlagEnum, bool> featureFlags = {
+        FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
+        ////featureFlag.resolution = FeatureFlagVideoResolution.HD_RESOLUTION;
+        FeatureFlagEnum.PIP_ENABLED: false,
+      };
+
+      // Here is an example, disabling features for each platform
+      if (Platform.isAndroid) {
+        // Disable ConnectionService usage on Android to avoid issues (see README)
+        featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
+        featureFlags[FeatureFlagEnum.INVITE_ENABLED] = false;
+        featureFlags[FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE] = false;
+      } else if (Platform.isIOS) {
+        // Disable PIP on iOS as it looks weird
+        featureFlags[FeatureFlagEnum.PIP_ENABLED] = false;
+      }
+
+      // Define meetings options here
+      var options = JitsiMeetingOptions(room: id)
+        ..serverURL = serverUrl
+        ..subject = topic
+        ..userDisplayName = _userName
+        ..userEmail = _userEmail
+        ..audioOnly = isAudioOnly
+        ..audioMuted = isAudioMuted
+        ..videoMuted = isVideoMuted
+        ..userAvatarURL = _userPhotoUrl
+        ..featureFlags.addAll(featureFlags)
+        ..webOptions = {
+          "roomName": JitsiMeetingOptions(room: id),
+          "width": "100%",
+          "height": "100%",
+          "enableWelcomePage": false,
+          "chromeExtensionBanner": null,
+          "userInfo": {"displayName": _userName}
+        };
+
+      debugPrint("JitsiMeetingOptions: $options");
+      var connectivityResult = await (Connectivity().checkConnectivity());
+      if (connectivityResult == ConnectivityResult.none) {
+        Fluttertoast.showToast(
+            msg: 'No Internet Connection!',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.SNACKBAR,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.black,
+            textColor: Colors.white,
+            fontSize: 16.0);
+      } else {
+        await JitsiMeet.joinMeeting(
+          options,
+          listener: JitsiMeetingListener(onConferenceWillJoin: (message) {
+            Fluttertoast.showToast(
+                msg: 'Starting your meeting...',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
+            debugPrint("${options.room} will join with message: $message");
+          }, onConferenceJoined: (message) async {
+            //_submitHostMeetingData(
+            //    JitsiMeetingOptions().room, JitsiMeetingOptions().subject);
+            setState(() {
+              inMeeting = true;
+            });
+            liveMeetReference.push().set({
+              'meetId': id,
+              'topic': liveMeetTopic.text,
+              'host': _userName,
+              'chat': GchatEnabled,
+              'raise': GraiseEnabled,
+              'record': GrecordEnabled,
+              'live': GliveEnabled,
+              'yt': GshareYtEnabled,
+              'started': DateFormat.jm().format(DateTime.now()).toString(),
+              //'country': await getCountryName(),
+            });
+            Fluttertoast.showToast(
+                msg: 'Meeting Started',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
+            debugPrint("${options.room} joined with message: $message");
+          }, onConferenceTerminated: (message) {
+            setState(() {
+              inMeeting = false;
+            });
+            _deleteLiveMeet(context, liveMeets[position], position);
+            Fluttertoast.showToast(
+                msg: 'Meeting Ended By You',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
+            meetFeedback();
+            debugPrint("${options.room} terminated with message: $message");
+          }, onPictureInPictureWillEnter: (message) {
+            Fluttertoast.showToast(
+                msg: 'To return to meeting, open Just Meet',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
+            debugPrint(
+                "${options.room} entered PIP mode with message: $message");
+          }, onPictureInPictureTerminated: (message) {
+            debugPrint(
+                "${options.room} exited PIP mode with message: $message");
+          }, genericListeners: [
+            JitsiGenericListener(
+                eventName: 'readyToClose',
+                callback: (dynamic message) {
+                  debugPrint("readyToClose callback");
+                }),
+          ]),);
+      }
+    } catch (error) {
+      Fluttertoast.showToast(
+          msg: "Couldn't Start Your Meeting",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.SNACKBAR,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0);
+      debugPrint("error: $error");
+    }
+  }
+
   _joinRandomMeeting() async {
     String serverUrl =
         serverText.text?.trim()?.isEmpty ?? "" ? null : serverText.text;
+
+    var anonymous;
+    var gender;
+    await SharedPreferences.getInstance().then((prefs) {
+      setState(() {
+        anonymous = prefs.getBool('anonymous') ?? false;
+        gender = prefs.getString('Agender') ?? 'None';
+      });
+    });
 
     Map<FeatureFlagEnum, bool> featureFlags = {};
 
@@ -3725,44 +3684,29 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
         }
       }
 
-      List randommeets = [
-        'randomjustmeetroom0001',
-        'randomjustmeetroom0002',
-        'randomjustmeetroom0003',
-        'randomjustmeetroom0004'
-      ];
-
-      // Define meetings options here
-      var options = JitsiMeetingOptions(room: (randommeets.toList()..shuffle()).first)
+      var options = JitsiMeetingOptions(room: gender == 'None' ? anonymous == true ?  'randomjustmeetroomnoneUse' : 'randomjustmeetroomnone' : gender == 'Female' ? anonymous == true ? 'randomjustmeetroomfemaleUse' : 'randomjustmeetroomfemale' : anonymous == true ? 'randomjustmeetroommaleUse' : 'randomjustmeetroommale')
         ..serverURL = serverUrl
         ..subject = 'Random Meet'
-        ..userDisplayName = _userName
+        ..userDisplayName = anonymous ? 'Anonymous' : _userName
         ..userEmail = _userEmail
         ..audioOnly = isAudioOnly
         ..audioMuted = isAudioMuted
         ..videoMuted = isVideoMuted
-        ..userAvatarURL = _userPhotoUrl
         ..featureFlags.addAll(featureFlags)
         ..webOptions = {
-          "roomName": JitsiMeetingOptions(room: (randommeets.toList()..shuffle()).first).room,
+        //(randommeets.toList()..shuffle()).first).room
+          "roomName": JitsiMeetingOptions(room: gender == 'None' ? anonymous == true ?  'randomjustmeetroomnoneUse' : 'randomjustmeetroomnone' : gender == 'Female' ? anonymous == true ? 'randomjustmeetroomfemaleUse' : 'randomjustmeetroomfemale' : anonymous == true ? 'randomjustmeetroommaleUse' : 'randomjustmeetroommale'),
           "width": "100%",
           "height": "100%",
           "enableWelcomePage": false,
           "chromeExtensionBanner": null,
-          "userInfo": {"displayName": _userName}
+          "userInfo": {"displayName": anonymous ? 'Anonymous' : _userName}
         };
 
       debugPrint("JitsiMeetingOptions: $options");
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult == ConnectivityResult.none) {
-        Fluttertoast.showToast(
-            msg: 'No Internet Connection!',
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.SNACKBAR,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.black,
-            textColor: Colors.white,
-            fontSize: 16.0);
+        ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
       } else {
         await JitsiMeet.joinMeeting(
           options,
@@ -3806,6 +3750,14 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
             meetFeedback();
             debugPrint("${options.room} terminated with message: $message");
           }, onPictureInPictureWillEnter: (message) {
+            Fluttertoast.showToast(
+                msg: 'To return to meeting, open Just Meet',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
             debugPrint(
                 "${options.room} entered PIP mode with message: $message");
           }, onPictureInPictureTerminated: (message) {
@@ -3999,6 +3951,14 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
             meetFeedback();
             debugPrint("${options.room} terminated with message: $message");
           }, onPictureInPictureWillEnter: (message) {
+            Fluttertoast.showToast(
+                msg: 'To return to meeting, open Just Meet',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
             debugPrint(
                 "${options.room} entered PIP mode with message: $message");
           }, onPictureInPictureTerminated: (message) {
@@ -4124,14 +4084,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       debugPrint("JitsiMeetingOptions: $options");
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult == ConnectivityResult.none) {
-        Fluttertoast.showToast(
-            msg: 'No Internet Connection!',
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.SNACKBAR,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.black,
-            textColor: Colors.white,
-            fontSize: 16.0);
+        ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
       } else {
         await JitsiMeet.joinMeeting(
           options,
@@ -4201,6 +4154,14 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
             meetFeedback();
             debugPrint("${options.room} terminated with message: $message");
           }, onPictureInPictureWillEnter: (message) {
+            Fluttertoast.showToast(
+                msg: 'To return to meeting, open Just Meet',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
             debugPrint(
                 "${options.room} entered PIP mode with message: $message");
           }, onPictureInPictureTerminated: (message) {
@@ -4379,6 +4340,14 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
             meetFeedback();
             debugPrint("${options.room} terminated with message: $message");
           }, onPictureInPictureWillEnter: (message) {
+            Fluttertoast.showToast(
+                msg: 'To return to meeting, open Just Meet',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
             debugPrint(
                 "${options.room} entered PIP mode with message: $message");
           }, onPictureInPictureTerminated: (message) {
@@ -4463,14 +4432,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       debugPrint("JitsiMeetingOptions: $options");
       var connectivityResult = await (Connectivity().checkConnectivity());
       if (connectivityResult == ConnectivityResult.none) {
-        Fluttertoast.showToast(
-            msg: 'No Internet Connection!',
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.SNACKBAR,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.black,
-            textColor: Colors.white,
-            fontSize: 16.0);
+        ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
       } else {
         await JitsiMeet.joinMeeting(
           options,
@@ -4570,6 +4532,14 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
             meetFeedback();
             debugPrint("${options.room} terminated with message: $message");
           }, onPictureInPictureWillEnter: (message) {
+            Fluttertoast.showToast(
+                msg: 'To return to meeting, open Just Meet',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.SNACKBAR,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.black,
+                textColor: Colors.white,
+                fontSize: 16.0);
             debugPrint(
                 "${options.room} entered PIP mode with message: $message");
           }, onPictureInPictureTerminated: (message) {
@@ -4582,346 +4552,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                   debugPrint("readyToClose callback");
                 }),
           ]),);
-      }
-    } catch (error) {
-      Fluttertoast.showToast(
-          msg: "Couldn't Start Your Meeting",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
-      debugPrint("error: $error");
-    }
-  }
-
-  _hostPersonalMeeting() async {
-    getPInfo();
-    String serverUrl =
-        serverText.text?.trim()?.isEmpty ?? "" ? null : serverText.text;
-
-    try {
-      Map<FeatureFlagEnum, bool> featureFlags = {
-        FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
-        //featureFlag.resolution = FeatureFlagVideoResolution.HD_RESOLUTION;
-        FeatureFlagEnum.PIP_ENABLED: false,
-      };
-
-      // Here is an example, disabling features for each platform
-      if (Platform.isAndroid) {
-        // Disable ConnectionService usage on Android to avoid issues (see README)
-        featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
-        featureFlags[FeatureFlagEnum.INVITE_ENABLED] = false;
-        featureFlags[FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE] = false;
-      } else if (Platform.isIOS) {
-        // Disable PIP on iOS as it looks weird
-        featureFlags[FeatureFlagEnum.PIP_ENABLED] = false;
-      }
-      if (PchatEnabled == false) {
-        featureFlags[FeatureFlagEnum.CHAT_ENABLED] = false;
-      }
-
-      //if (timerEnabled == false) {
-      //  featureFlag.conferenceTimerEnabled = false;
-      //}
-      if (meetNameEnabled == false) {
-        featureFlags[FeatureFlagEnum.MEETING_NAME_ENABLED] = false;
-      }
-
-      // Define meetings options here
-      var options = JitsiMeetingOptions(room: PmeetingId.replaceAll(
-          RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""))
-        ..serverURL = serverUrl
-        ..subject = PmeetName
-        ..userDisplayName = _userName
-        ..userEmail = _userEmail
-        ..audioOnly = isAudioOnly
-        ..audioMuted = isAudioMuted
-        ..videoMuted = isVideoMuted
-        ..userAvatarURL = _userPhotoUrl
-        ..featureFlags.addAll(featureFlags)
-        ..webOptions = {
-          "roomName": JitsiMeetingOptions(room: PmeetingId.replaceAll(
-              RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "")).room,
-          "width": "100%",
-          "height": "100%",
-          "enableWelcomePage": false,
-          "chromeExtensionBanner": null,
-          "userInfo": {"displayName": _userName}
-        };
-
-      debugPrint("JitsiMeetingOptions: $options");
-      var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult == ConnectivityResult.none) {
-        Fluttertoast.showToast(
-            msg: 'No Internet Connection!',
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.SNACKBAR,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.black,
-            textColor: Colors.white,
-            fontSize: 16.0);
-      } else {
-        await JitsiMeet.joinMeeting(
-          options,
-          listener: JitsiMeetingListener(onConferenceWillJoin: (message) {
-            Fluttertoast.showToast(
-                msg: 'Starting your meeting...',
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.SNACKBAR,
-                timeInSecForIosWeb: 1,
-                backgroundColor: Colors.black,
-                textColor: Colors.white,
-                fontSize: 16.0);
-            debugPrint("${options.room} will join with message: $message");
-          }, onConferenceJoined: (message) async {
-           // _submitHostMeetingData(
-           //     JitsiMeetingOptions().room, JitsiMeetingOptions().subject);
-            setState(() {
-              inMeeting = true;
-            });
-            Fluttertoast.showToast(
-                msg: 'Meeting Started',
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.SNACKBAR,
-                timeInSecForIosWeb: 1,
-                backgroundColor: Colors.black,
-                textColor: Colors.white,
-                fontSize: 16.0);
-            if (copyEnabled == true) {
-              var dynamicLink = await createDynamicLink(
-                  meet: options.room.replaceAll(
-                      RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""),
-                  sub: options.subject,
-                  ch: PchatEnabled.toString(),
-                  rh: PraiseEnabled.toString(),
-                  rm: PrecordEnabled.toString(),
-                  ls: PliveEnabled.toString(),
-                  yt: PshareYtEnabled.toString(),
-                  ko: PKickOutEnabled.toString(),
-                  host: _userEmail);
-              var dynamicWeb = webLink +
-                  options.room.replaceAll(
-                      RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "");
-              final textshare =
-                  "${nameText.text} is inviting you to join a Personal Just Meet meeting.  "
-                  "\n"
-                  "\n"
-                  "Meeting Id - ${options.room}  "
-                  "\n"
-                  "Meeting Topic - ${options.subject}.  "
-                  "\n"
-                  "\n"
-                  "Android Meeting URL - $dynamicLink  "
-                  "\n"
-                  "\n"
-                  "IOS and PC Meeting URL - $dynamicWeb "
-                  "\n"
-                  "\n"
-                  "Meeting Password - Host will share separately. ";
-              copyInvite(textshare);
-            } else {}
-            debugPrint("${options.room} joined with message: $message");
-          }, onConferenceTerminated: (message) {
-            setState(() {
-              inMeeting = false;
-            });
-            Fluttertoast.showToast(
-                msg: 'Meeting Ended By You',
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.SNACKBAR,
-                timeInSecForIosWeb: 1,
-                backgroundColor: Colors.black,
-                textColor: Colors.white,
-                fontSize: 16.0);
-            meetFeedback();
-            debugPrint("${options.room} terminated with message: $message");
-          }, onPictureInPictureWillEnter: (message) {
-            debugPrint(
-                "${options.room} entered PIP mode with message: $message");
-          }, onPictureInPictureTerminated: (message) {
-            debugPrint(
-                "${options.room} exited PIP mode with message: $message");
-          }, genericListeners: [
-            JitsiGenericListener(
-                eventName: 'readyToClose',
-                callback: (dynamic message) {
-                  debugPrint("readyToClose callback");
-                }),
-          ]),);
-      }
-    } catch (error) {
-      Fluttertoast.showToast(
-          msg: "Couldn't Start Your Meeting",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
-      debugPrint("error: $error");
-    }
-  }
-
-  _hostScheduledMeeting() async {
-    String serverUrl =
-        serverText.text?.trim()?.isEmpty ?? "" ? null : serverText.text;
-
-    try {
-      Map<FeatureFlagEnum, bool> featureFlags = {
-        FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
-        //featureFlag.resolution = FeatureFlagVideoResolution.HD_RESOLUTION;
-        FeatureFlagEnum.PIP_ENABLED: false,
-      };
-
-      // Here is an example, disabling features for each platform
-      if (Platform.isAndroid) {
-        // Disable ConnectionService usage on Android to avoid issues (see README)
-        featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
-        featureFlags[FeatureFlagEnum.INVITE_ENABLED] = false;
-        featureFlags[FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE] = false;
-      } else if (Platform.isIOS) {
-        // Disable PIP on iOS as it looks weird
-        featureFlags[FeatureFlagEnum.PIP_ENABLED] = false;
-      }
-      if (SchatEnabled == false) {
-        featureFlags[FeatureFlagEnum.CHAT_ENABLED] = false;
-      }
-      //if (timerEnabled == false) {
-      //  featureFlag.conferenceTimerEnabled = false;
-      //}
-      if (meetNameEnabled == false) {
-        featureFlags[FeatureFlagEnum.MEETING_NAME_ENABLED] = false;
-      }
-
-      // Define meetings options here
-      var options = JitsiMeetingOptions(room: hostRoomText.text
-          .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""))
-        ..serverURL = serverUrl
-        ..subject = hostSubjectText.text
-        ..userDisplayName = _userName
-        ..userEmail = _userEmail
-        ..audioOnly = isAudioOnly
-        ..audioMuted = isAudioMuted
-        ..videoMuted = isVideoMuted
-        ..userAvatarURL = _userPhotoUrl
-        ..featureFlags.addAll(featureFlags)
-        ..webOptions = {
-          "roomName": JitsiMeetingOptions(room: hostRoomText.text
-              .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "")).room,
-          "width": "100%",
-          "height": "100%",
-          "enableWelcomePage": false,
-          "chromeExtensionBanner": null,
-          "userInfo": {"displayName": _userName}
-        };
-
-      debugPrint("JitsiMeetingOptions: $options");
-      if (hostRoomText.text.length >= 10) {
-        if (hostSubjectText.text.isNotEmpty) {
-          var connectivityResult = await (Connectivity().checkConnectivity());
-          if (connectivityResult == ConnectivityResult.none) {
-            Fluttertoast.showToast(
-                msg: 'No Internet Connection!',
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.SNACKBAR,
-                timeInSecForIosWeb: 1,
-                backgroundColor: Colors.black,
-                textColor: Colors.white,
-                fontSize: 16.0);
-          } else {
-            await JitsiMeet.joinMeeting(
-              options,
-              listener: JitsiMeetingListener(onConferenceWillJoin: (message) {
-                Fluttertoast.showToast(
-                    msg: 'Starting your meeting...',
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.SNACKBAR,
-                    timeInSecForIosWeb: 1,
-                    backgroundColor: Colors.black,
-                    textColor: Colors.white,
-                    fontSize: 16.0);
-                debugPrint("${options.room} will join with message: $message");
-              }, onConferenceJoined: (message) async {
-              //  _submitHostMeetingData(
-               //     JitsiMeetingOptions().room, JitsiMeetingOptions().subject);
-                setState(() {
-                  inMeeting = true;
-                });
-                Fluttertoast.showToast(
-                    msg: 'Meeting Started',
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.SNACKBAR,
-                    timeInSecForIosWeb: 1,
-                    backgroundColor: Colors.black,
-                    textColor: Colors.white,
-                    fontSize: 16.0);
-                if (copyEnabled == true) {
-                  var dynamicLink = await createDynamicLink(
-                      meet: options.room.replaceAll(
-                          RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""),
-                      sub: options.subject,
-                      ch: SchatEnabled.toString(),
-                      rh: SraiseEnabled.toString(),
-                      rm: SrecordEnabled.toString(),
-                      ls: SliveEnabled.toString(),
-                      yt: SshareYtEnabled.toString(),
-                      ko: SKickOutEnabled.toString(),
-                      host: _userEmail);
-                  var dynamicWeb = webLink +
-                      options.room.replaceAll(
-                          RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "");
-                  final textshare =
-                      "${nameText.text} is inviting you to join a Just Meet meeting.  "
-                      "\n"
-                      "\n"
-                      "Meeting Id - ${options.room}  "
-                      "\n"
-                      "Meeting Topic - ${options.subject}.  "
-                      "\n"
-                      "\n"
-                      "Android Meeting URL - $dynamicLink  "
-                      "\n"
-                      "\n"
-                      "IOS and PC Meeting URL - $dynamicWeb "
-                      "\n"
-                      "\n"
-                      "Meeting Password - Host will share separately. ";
-                  copyInvite(textshare);
-                } else {}
-                debugPrint("${options.room} joined with message: $message");
-              }, onConferenceTerminated: (message) {
-                setState(() {
-                  inMeeting = false;
-                });
-                Fluttertoast.showToast(
-                    msg: 'Meeting Ended By You',
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.SNACKBAR,
-                    timeInSecForIosWeb: 1,
-                    backgroundColor: Colors.black,
-                    textColor: Colors.white,
-                    fontSize: 16.0);
-                hostRoomText.clear();
-                hostSubjectText.clear();
-                meetFeedback();
-                debugPrint("${options.room} terminated with message: $message");
-              }, onPictureInPictureWillEnter: (message) {
-                debugPrint(
-                    "${options.room} entered PIP mode with message: $message");
-              }, onPictureInPictureTerminated: (message) {
-                debugPrint(
-                    "${options.room} exited PIP mode with message: $message");
-              }, genericListeners: [
-                JitsiGenericListener(
-                    eventName: 'readyToClose',
-                    callback: (dynamic message) {
-                      debugPrint("readyToClose callback");
-                    }),
-              ]),);
-          }
-        }
       }
     } catch (error) {
       Fluttertoast.showToast(
@@ -4939,10 +4569,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   _joinMeetingNoAvatar() async {
     String serverUrl =
         serverText.text?.trim()?.isEmpty ?? "" ? null : serverText.text;
-
-    setState(() {
-      roomText.text.length >= 10 ? _idError = false : _idError = true;
-    });
 
     Map<FeatureFlagEnum, bool> featureFlags = {};
 
@@ -5017,14 +4643,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
       if (roomText.text.length >= 10) {
         var connectivityResult = await (Connectivity().checkConnectivity());
         if (connectivityResult == ConnectivityResult.none) {
-          Fluttertoast.showToast(
-              msg: 'No Internet Connection!',
-              toastLength: Toast.LENGTH_SHORT,
-              gravity: ToastGravity.SNACKBAR,
-              timeInSecForIosWeb: 1,
-              backgroundColor: Colors.black,
-              textColor: Colors.white,
-              fontSize: 16.0);
+          ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
         } else {
           await JitsiMeet.joinMeeting(
             options,
@@ -5094,6 +4713,14 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
               meetFeedback();
               debugPrint("${options.room} terminated with message: $message");
             }, onPictureInPictureWillEnter: (message) {
+              Fluttertoast.showToast(
+                  msg: 'To return to meeting, open Just Meet',
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.SNACKBAR,
+                  timeInSecForIosWeb: 1,
+                  backgroundColor: Colors.black,
+                  textColor: Colors.white,
+                  fontSize: 16.0);
               debugPrint(
                   "${options.room} entered PIP mode with message: $message");
             }, onPictureInPictureTerminated: (message) {
@@ -5111,354 +4738,6 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
     } catch (error) {
       Fluttertoast.showToast(
           msg: "Couldn't Connect You to Your Meeting",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
-      debugPrint("error: $error");
-    }
-  }
-
-  _hostPersonalMeetingNoAvatar() async {
-    getPInfo();
-    String serverUrl =
-        serverText.text?.trim()?.isEmpty ?? "" ? null : serverText.text;
-
-    try {
-      Map<FeatureFlagEnum, bool> featureFlags = {
-        FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
-        //featureFlag.resolution = FeatureFlagVideoResolution.HD_RESOLUTION;
-        FeatureFlagEnum.PIP_ENABLED: false,
-      };
-
-      // Here is an example, disabling features for each platform
-      if (Platform.isAndroid) {
-        // Disable ConnectionService usage on Android to avoid issues (see README)
-        featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
-        featureFlags[FeatureFlagEnum.INVITE_ENABLED] = false;
-        featureFlags[FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE] = false;
-      } else if (Platform.isIOS) {
-        // Disable PIP on iOS as it looks weird
-        featureFlags[FeatureFlagEnum.PIP_ENABLED] = false;
-      }
-      if (PchatEnabled == false) {
-        featureFlags[FeatureFlagEnum.CHAT_ENABLED] = false;
-      }
-
-      //if (timerEnabled == false) {
-      //  featureFlag.conferenceTimerEnabled = false;
-      //}
-      if (meetNameEnabled == false) {
-        featureFlags[FeatureFlagEnum.MEETING_NAME_ENABLED] = false;
-      }
-
-      // Define meetings options here
-      var options = JitsiMeetingOptions(room: PmeetingId.replaceAll(
-          RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""))
-        ..serverURL = serverUrl
-        ..subject = PmeetName
-        ..userDisplayName = _userName
-        ..userEmail = _userEmail
-        ..audioOnly = isAudioOnly
-        ..audioMuted = isAudioMuted
-        ..videoMuted = isVideoMuted
-        ..featureFlags.addAll(featureFlags)
-        ..webOptions = {
-          "roomName": JitsiMeetingOptions(room: PmeetingId.replaceAll(
-              RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "")).room,
-          "width": "100%",
-          "height": "100%",
-          "enableWelcomePage": false,
-          "chromeExtensionBanner": null,
-          "userInfo": {"displayName": _userName}
-        };
-
-      debugPrint("JitsiMeetingOptions: $options");
-      var connectivityResult = await (Connectivity().checkConnectivity());
-      if (connectivityResult == ConnectivityResult.none) {
-        Fluttertoast.showToast(
-            msg: 'No Internet Connection!',
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.SNACKBAR,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.black,
-            textColor: Colors.white,
-            fontSize: 16.0);
-      } else {
-        await JitsiMeet.joinMeeting(
-          options,
-          listener: JitsiMeetingListener(onConferenceWillJoin: (message) {
-            Fluttertoast.showToast(
-                msg: 'Starting your meeting...',
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.SNACKBAR,
-                timeInSecForIosWeb: 1,
-                backgroundColor: Colors.black,
-                textColor: Colors.white,
-                fontSize: 16.0);
-            debugPrint("${options.room} will join with message: $message");
-          }, onConferenceJoined: (message) async {
-           // _submitHostMeetingData(
-           //     JitsiMeetingOptions().room, JitsiMeetingOptions().subject);
-            setState(() {
-              inMeeting = true;
-            });
-            Fluttertoast.showToast(
-                msg: 'Meeting Started',
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.SNACKBAR,
-                timeInSecForIosWeb: 1,
-                backgroundColor: Colors.black,
-                textColor: Colors.white,
-                fontSize: 16.0);
-            // db1.saveNote1(Note1('Personal Meeting', PmeetingId));
-            // db1.getAllNotes1().then((notes1) {
-            //   setState(() {
-            //     items1.clear();
-            //     notes1.forEach((note1) {
-            //       items1.add(Note1.fromMap(note1));
-            //     });
-            //   });
-            // });
-            if (copyEnabled == true) {
-              var dynamicLink = await createDynamicLink(
-                  meet: options.room.replaceAll(
-                      RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""),
-                  sub: options.subject,
-                  ch: PchatEnabled.toString(),
-                  rh: PraiseEnabled.toString(),
-                  rm: PrecordEnabled.toString(),
-                  ls: PliveEnabled.toString(),
-                  yt: PshareYtEnabled.toString(),
-                  ko: PKickOutEnabled.toString(),
-                  host: _userEmail);
-              var dynamicWeb = webLink +
-                  options.room.replaceAll(
-                      RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "");
-              final textshare =
-                  "${nameText.text} is inviting you to join a Personal Just Meet meeting.  "
-                  "\n"
-                  "\n"
-                  "Meeting Id - ${options.room}  "
-                  "\n"
-                  "Meeting Topic - ${options.subject}.  "
-                  "\n"
-                  "\n"
-                  "Android Meeting URL - $dynamicLink  "
-                  "\n"
-                  "\n"
-                  "IOS and PC Meeting URL - $dynamicWeb "
-                  "\n"
-                  "\n"
-                  "Meeting Password - Host will share separately. ";
-              copyInvite(textshare);
-            } else {}
-            debugPrint("${options.room} joined with message: $message");
-          }, onConferenceTerminated: (message) {
-            setState(() {
-              inMeeting = false;
-            });
-            Fluttertoast.showToast(
-                msg: 'Meeting Ended By You',
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.SNACKBAR,
-                timeInSecForIosWeb: 1,
-                backgroundColor: Colors.black,
-                textColor: Colors.white,
-                fontSize: 16.0);
-            meetFeedback();
-            debugPrint("${options.room} terminated with message: $message");
-          }, onPictureInPictureWillEnter: (message) {
-            debugPrint(
-                "${options.room} entered PIP mode with message: $message");
-          }, onPictureInPictureTerminated: (message) {
-            debugPrint(
-                "${options.room} exited PIP mode with message: $message");
-          }, genericListeners: [
-            JitsiGenericListener(
-                eventName: 'readyToClose',
-                callback: (dynamic message) {
-                  debugPrint("readyToClose callback");
-                }),
-          ]),);
-      }
-    } catch (error) {
-      Fluttertoast.showToast(
-          msg: "Couldn't Start Your Meeting",
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
-      debugPrint("error: $error");
-    }
-  }
-
-  _hostScheduledMeetingNoAvatar() async {
-    String serverUrl =
-        serverText.text?.trim()?.isEmpty ?? "" ? null : serverText.text;
-
-    try {
-      Map<FeatureFlagEnum, bool> featureFlags = {
-        FeatureFlagEnum.WELCOME_PAGE_ENABLED: false,
-        //featureFlag.resolution = FeatureFlagVideoResolution.HD_RESOLUTION;
-        FeatureFlagEnum.PIP_ENABLED: false,
-      };
-
-      // Here is an example, disabling features for each platform
-      if (Platform.isAndroid) {
-        // Disable ConnectionService usage on Android to avoid issues (see README)
-        featureFlags[FeatureFlagEnum.CALL_INTEGRATION_ENABLED] = false;
-        featureFlags[FeatureFlagEnum.INVITE_ENABLED] = false;
-        featureFlags[FeatureFlagEnum.TOOLBOX_ALWAYS_VISIBLE] = false;
-      } else if (Platform.isIOS) {
-        // Disable PIP on iOS as it looks weird
-        featureFlags[FeatureFlagEnum.PIP_ENABLED] = false;
-      }
-      if (SchatEnabled == false) {
-        featureFlags[FeatureFlagEnum.CHAT_ENABLED] = false;
-      }
-
-      //if (timerEnabled == false) {
-      //  featureFlag.conferenceTimerEnabled = false;
-      //}
-      if (meetNameEnabled == false) {
-        featureFlags[FeatureFlagEnum.MEETING_NAME_ENABLED] = false;
-      }
-
-      // Define meetings options here
-      var options = JitsiMeetingOptions(room: hostRoomText.text
-          .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""))
-        ..serverURL = serverUrl
-        ..subject = hostSubjectText.text
-        ..userDisplayName = _userName
-        ..userEmail = _userEmail
-        ..audioOnly = isAudioOnly
-        ..audioMuted = isAudioMuted
-        ..videoMuted = isVideoMuted
-        ..featureFlags.addAll(featureFlags)
-        ..webOptions = {
-          "roomName": JitsiMeetingOptions(room: hostRoomText.text
-              .replaceAll(RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "")).room,
-          "width": "100%",
-          "height": "100%",
-          "enableWelcomePage": false,
-          "chromeExtensionBanner": null,
-          "userInfo": {"displayName": _userName}
-        };
-
-      debugPrint("JitsiMeetingOptions: $options");
-      if (hostRoomText.text.length >= 10) {
-        if (hostSubjectText.text.isNotEmpty) {
-          var connectivityResult = await (Connectivity().checkConnectivity());
-          if (connectivityResult == ConnectivityResult.none) {
-            Fluttertoast.showToast(
-                msg: 'No Internet Connection!',
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.SNACKBAR,
-                timeInSecForIosWeb: 1,
-                backgroundColor: Colors.black,
-                textColor: Colors.white,
-                fontSize: 16.0);
-          } else {
-            await JitsiMeet.joinMeeting(
-              options,
-              listener: JitsiMeetingListener(onConferenceWillJoin: (message) {
-                Fluttertoast.showToast(
-                    msg: 'Starting your meeting...',
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.SNACKBAR,
-                    timeInSecForIosWeb: 1,
-                    backgroundColor: Colors.black,
-                    textColor: Colors.white,
-                    fontSize: 16.0);
-                debugPrint("${options.room} will join with message: $message");
-              }, onConferenceJoined: (message) async {
-                //_submitHostMeetingData(
-                //    JitsiMeetingOptions().room, JitsiMeetingOptions().subject);
-                setState(() {
-                  inMeeting = true;
-                });
-                Fluttertoast.showToast(
-                    msg: 'Meeting Started',
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.SNACKBAR,
-                    timeInSecForIosWeb: 1,
-                    backgroundColor: Colors.black,
-                    textColor: Colors.white,
-                    fontSize: 16.0);
-                if (copyEnabled == true) {
-                  var dynamicLink = await createDynamicLink(
-                      meet: options.room.replaceAll(
-                          RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), ""),
-                      sub: options.subject,
-                      ch: SchatEnabled.toString(),
-                      rh: SraiseEnabled.toString(),
-                      rm: SrecordEnabled.toString(),
-                      ls: SliveEnabled.toString(),
-                      yt: SshareYtEnabled.toString(),
-                      ko: PKickOutEnabled.toString(),
-                      host: _userEmail);
-                  var dynamicWeb = webLink +
-                      options.room.replaceAll(
-                          RegExp(r'[-_!@#$%^&*(),.?":{}|<>+=|\/~` ]'), "");
-                  final textshare =
-                      "${nameText.text} is inviting you to join a Just Meet meeting.  "
-                      "\n"
-                      "\n"
-                      "Meeting Id - ${options.room}  "
-                      "\n"
-                      "Meeting Topic - ${options.subject}.  "
-                      "\n"
-                      "\n"
-                      "Android Meeting URL - $dynamicLink  "
-                      "\n"
-                      "\n"
-                      "IOS and PC Meeting URL - $dynamicWeb "
-                      "\n"
-                      "\n"
-                      "Meeting Password - Host will share separately. ";
-                  copyInvite(textshare);
-                } else {}
-                debugPrint("${options.room} joined with message: $message");
-              }, onConferenceTerminated: (message) {
-                setState(() {
-                  inMeeting = false;
-                });
-                Fluttertoast.showToast(
-                    msg: 'Meeting Ended By You',
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.SNACKBAR,
-                    timeInSecForIosWeb: 1,
-                    backgroundColor: Colors.black,
-                    textColor: Colors.white,
-                    fontSize: 16.0);
-                hostRoomText.clear();
-                hostSubjectText.clear();
-                meetFeedback();
-                debugPrint("${options.room} terminated with message: $message");
-              }, onPictureInPictureWillEnter: (message) {
-                debugPrint(
-                    "${options.room} entered PIP mode with message: $message");
-              }, onPictureInPictureTerminated: (message) {
-                debugPrint(
-                    "${options.room} exited PIP mode with message: $message");
-              }, genericListeners: [
-                JitsiGenericListener(
-                    eventName: 'readyToClose',
-                    callback: (dynamic message) {
-                      debugPrint("readyToClose callback");
-                    }),
-              ]),);
-          }
-        }
-      }
-    } catch (error) {
-      Fluttertoast.showToast(
-          msg: "Couldn't Start Your Meeting",
           toastLength: Toast.LENGTH_SHORT,
           gravity: ToastGravity.SNACKBAR,
           timeInSecForIosWeb: 1,
@@ -5493,93 +4772,5 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
   _onError(error) {
     debugPrint("_onError broadcasted");
-  }
-
-  _sharePMI(
-      String roomids, String topics, String androidUrl, String url) async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.none) {
-      Fluttertoast.showToast(
-          msg: 'No Internet Connection!',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
-    } else {
-      final textshare =
-          "${nameText.text} is inviting you to join a Personal Just Meet meeting.  "
-          "\n"
-          "\n"
-          "Meeting Id: $roomids.  "
-          "\n"
-          "\n"
-          "Meeting Topic: $topics.  "
-          "\n"
-          "\n"
-          "Android Meeting URL: $androidUrl  "
-          "\n"
-          "\n"
-          "iOS and PC Meeting URL: $url ";
-      final RenderBox box = context.findRenderObject();
-      Share.share(textshare,
-          subject:
-              "${nameText.text} is inviting you to join a Just Meet Personal meeting.  ",
-          sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
-    }
-  }
-
-  _shareScheduledMeeting(String roomids, String topics, String androidUrl,
-      String url, String date, String from, String to) async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.none) {
-      Fluttertoast.showToast(
-          msg: 'No Internet Connection!',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
-    } else {
-      final textshare =
-          "${nameText.text} is inviting you to join a scheduled Just Meet meeting.  "
-          "\n"
-          "\n"
-          "Time: $date, from $from to $to"
-          "\n"
-          "\n"
-          "Meeting Id: $roomids.  "
-          "\n"
-          "\n"
-          "Meeting Topic: $topics.  "
-          "\n"
-          "\n"
-          "Android Meeting URL: $androidUrl  "
-          "\n"
-          "\n"
-          "iOS and PC Meeting URL: $url ";
-      final RenderBox box = context.findRenderObject();
-      Share.share(textshare,
-          subject:
-              "${nameText.text} is inviting you to join a Just Meet meeting.  "
-              "\n"
-              "\n"
-              "Time: $date, from $from to $to"
-              "\n"
-              "\n"
-              "Meeting Id: $roomids.  "
-              "\n"
-              "\n"
-              "Meeting Topic: $topics.  "
-              "\n"
-              "\n"
-              "Android Meeting URL: $androidUrl  "
-              "\n"
-              "\n"
-              "iOS and PC Meeting URL: $url ",
-          sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
-    }
   }
 }

@@ -5,12 +5,7 @@
     <item>
         <bitmap
             android:gravity= "center"
-            android:src= "@drawable/night" />
-    </item>
-    <item
-        android:bottom="40dp">
-        <bitmap android:src="@drawable/bottom_night"
-            android:gravity="bottom" />
+            android:src= "@drawable/ssicon" />
     </item>
     <!-- You can insert your own image assets here -->
     <!-- <item>

@@ -4,10 +4,10 @@ import 'package:flutter/widgets.dart';
 import 'package:jagu_meet/model/note.dart';
 import 'package:jagu_meet/widgets/cupertinoSwitchListTile.dart';
 import 'package:jagu_meet/widgets/dialogs.dart';
-import '../../utils/databasehelper_scheduled.dart';
+import '../../../utils/databasehelper_scheduled.dart';
 import 'package:date_time_picker/date_time_picker.dart';
-import '../../theme/theme.dart';
-import '../../theme/themeNotifier.dart';
+import '../../../theme/theme.dart';
+import '../../../theme/themeNotifier.dart';
 import 'package:provider/provider.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:jagu_meet/classes/focusNode.dart';
@@ -178,20 +178,28 @@ class _NoteScreenState extends State<NoteScreen> {
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(
-              Icons.arrow_back_ios_sharp,
-              color: Colors.white,
+              Icons.clear,
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          iconTheme: IconThemeData(color: Colors.white),
-          backgroundColor:themeNotifier.getTheme() == darkTheme
-              ? Color(0xFF242424)
-              : Colors.blue,
-          elevation: 5,
-          title: const Text(
+          iconTheme: IconThemeData(color: themeNotifier.getTheme() == darkTheme
+              ? Colors.white : Colors.black54),
+          backgroundColor: themeNotifier.getTheme() == darkTheme
+              ? Color(0xff0d0d0d)
+              : Color(0xffffffff),
+          elevation: 0,
+          bottom: PreferredSize(
+              child: Divider(
+                  height: 1,
+                  color: themeNotifier.getTheme() == darkTheme
+                      ?  Color(0xFF303030) : Colors.black12
+              ),
+              preferredSize: Size(double.infinity, 0.0)),
+          title: Text(
             'Schedule a Meeting',
             style: TextStyle(
-              color: Colors.white,
+              color: themeNotifier.getTheme() == darkTheme
+                  ? Colors.white : Colors.black54,
             ),
           ),
           actions: [
@@ -507,7 +515,9 @@ class _NoteScreenState extends State<NoteScreen> {
                                           ? Color(0xFF303030)
                                           : Colors.black12,
                                       width: 1.0),
-                                  borderRadius: BorderRadius.circular(0),
+                                  borderRadius: const BorderRadius.all(
+                                    const Radius.circular(10.0),
+                                  ),
                                 ),
                                 floatingLabelBehavior:
                                     FloatingLabelBehavior.never,
@@ -555,7 +565,9 @@ class _NoteScreenState extends State<NoteScreen> {
                                           ? Color(0xFF303030)
                                           : Colors.black12,
                                       width: 1.0),
-                                  borderRadius: BorderRadius.circular(0),
+                                  borderRadius: const BorderRadius.all(
+                                    const Radius.circular(10.0),
+                                  ),
                                 ),
                                 floatingLabelBehavior:
                                     FloatingLabelBehavior.never,
@@ -799,11 +811,14 @@ class _NoteScreenState extends State<NoteScreen> {
     ),
           ],
           cancelButton: Container(
-              color:themeNotifier.getTheme() == darkTheme
-                  ? Color(0xFF242424)
-                  : Colors.white,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color:themeNotifier.getTheme() == darkTheme
+                    ? Color(0xFF242424)
+                    : Colors.white,
+              ),
               child: CupertinoActionSheetAction(
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold),),
             isDestructiveAction: true,
             onPressed: () {
               Navigator.pop(context);

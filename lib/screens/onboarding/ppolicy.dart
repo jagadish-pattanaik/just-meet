@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:jagu_meet/screens/loginPage.dart';
+import 'package:jagu_meet/screens/user/loginPage.dart';
 import 'package:jagu_meet/theme/theme.dart';
 import 'package:jagu_meet/theme/themeNotifier.dart';
 import 'package:provider/provider.dart';
@@ -17,12 +17,12 @@ class PriPolicy extends StatefulWidget {
 }
 
 class _PriPolicyState extends State<PriPolicy> {
-  var _darkTheme;
   bool permisions = false;
 
   checkPermissions() async {
     var status = await Permission.camera.status;
     var stat = await Permission.microphone.status;
+    //var locStatus = await Permission.location.status;
     if (status.isGranted && stat.isGranted) {
       setState(() {
         permisions = true;
@@ -71,40 +71,40 @@ class _PriPolicyState extends State<PriPolicy> {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     TextStyle linkStyle = TextStyle(color: Colors.blue, fontSize: 16,);
     return MaterialApp(
       title: 'Just Meet',
       debugShowCheckedModeBanner: false,
       theme: themeNotifier.getTheme(),
       home: Scaffold(
+        appBar: AppBar(
+          iconTheme: IconThemeData(color: themeNotifier.getTheme() == darkTheme
+              ? Colors.white : Colors.black54),
+          backgroundColor: themeNotifier.getTheme() == darkTheme
+              ? Color(0xff0d0d0d)
+              : Color(0xffffffff),
+          elevation: 0,
+          bottom: PreferredSize(
+              child: Divider(
+                  height: 1,
+                  color: themeNotifier.getTheme() == darkTheme
+                      ?  Color(0xFF303030) : Colors.black12
+              ),
+              preferredSize: Size(double.infinity, 0.0)),
+          centerTitle: true,
+          title: Text(
+            'Welcome to Just Meet',
+            style: TextStyle(
+              color: themeNotifier.getTheme() == darkTheme
+                  ? Colors.white : Colors.black54,
+            ),
+          ),
+        ),
         body: SafeArea(
           child: Container(
             height: double.maxFinite,
             child: SingleChildScrollView(
               child: Column(children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(top: 15, bottom: 5),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: themeNotifier.getTheme() == darkTheme
-                              ? Color(0xFF242424)
-                              : Colors.grey,
-                          radius: 30,
-                          child: Icon(
-                            Icons.file_copy_outlined,
-                            size: 30,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ]),
-                ),
-                Text(
-                  'Privacy Policy',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                ),
                 SizedBox(
                   height: 10,
                 ),
@@ -258,10 +258,11 @@ class _PriPolicyState extends State<PriPolicy> {
                       onPressed: () async {
                         var status = await Permission.camera.status;
                         var stat = await Permission.microphone.status;
+                       // var locStatus = await Permission.location.status;
                         if (status.isGranted && stat.isGranted) {
                           if (signStatus == true) {
                             setPref();
-                            Future.delayed(Duration(milliseconds: 500), () {});
+                            Future.delayed(Duration(milliseconds: 1000), () {});
                             Navigator.pushReplacement(
                                 context,
                                 CupertinoPageRoute(
@@ -269,27 +270,20 @@ class _PriPolicyState extends State<PriPolicy> {
                                 ));
                           } else {
                             setPref();
-                            Future.delayed(Duration(milliseconds: 500), () {});
+                            Future.delayed(Duration(milliseconds: 1000), () {});
                             Navigator.pushReplacement(
                                 context,
                                 CupertinoPageRoute(
                                   builder: (BuildContext context) =>
                                       LoginScreen(),
                                 ));
-                            Fluttertoast.showToast(
-                                msg: 'Welcome!',
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.SNACKBAR,
-                                timeInSecForIosWeb: 1,
-                                backgroundColor: Colors.black,
-                                textColor: Colors.white,
-                                fontSize: 16.0);
                           }
                         } else {
                           if (status.isDenied) {
                             Map<Permission, PermissionStatus> statuses = await [
                               Permission.camera,
                               Permission.microphone,
+                              //Permission.location,
                             ].request();
                             checkPermissions();
                           } else if (status.isPermanentlyDenied) {
@@ -304,6 +298,7 @@ class _PriPolicyState extends State<PriPolicy> {
                                   await [
                                 Permission.camera,
                                 Permission.microphone,
+                                //    Permission.location,
                               ].request();
                               checkPermissions();
                             } else if (stat.isPermanentlyDenied) {
@@ -333,7 +328,7 @@ class _PriPolicyState extends State<PriPolicy> {
                       child: Text(
                         permisions ? 'Agree' : 'Allow Just Meet',
                         style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16,),
+                            color: Colors.white, fontSize: 16,),
                       )),
                   SizedBox(
                     width: 20,

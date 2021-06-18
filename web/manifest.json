@@ -1,13 +1,17 @@
 {
-    "name": "jagu_meet",
-    "short_name": "jagu_meet",
+    "name": "Just Meet Video Conferencing",
+    "short_name": "Just Meet",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Just Meet Video Conferencing",
     "orientation": "portrait-primary",
-    "prefer_related_applications": false,
+    "prefer_related_applications": true,
+    "related_applications": [{
+        "platform": "play",
+        "id": "com.jaguweb.jagu_meet"
+    }],
     "icons": [
         {
             "src": "icons/Icon-192.png",

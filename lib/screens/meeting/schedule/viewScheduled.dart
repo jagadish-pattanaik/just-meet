@@ -17,8 +17,8 @@ import 'package:rate_my_app/rate_my_app.dart';
 import 'package:share/share.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../theme/theme.dart';
-import '../../theme/themeNotifier.dart';
+import '../../../theme/theme.dart';
+import '../../../theme/themeNotifier.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import 'NoteScreen.dart';
@@ -302,19 +302,27 @@ class _viewScheduledState extends State<viewScheduled> {
           leading: IconButton(
             icon: Icon(
               Icons.arrow_back_ios_sharp,
-              color: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: themeNotifier.getTheme() == darkTheme
+              ? Colors.white : Colors.black54),
           backgroundColor: themeNotifier.getTheme() == darkTheme
-              ? Color(0xFF242424)
-              : Colors.blue,
-          elevation: 5,
-          title: const Text(
+              ? Color(0xff0d0d0d)
+              : Color(0xffffffff),
+          elevation: 0,
+          bottom: PreferredSize(
+              child: Divider(
+                  height: 1,
+                  color: themeNotifier.getTheme() == darkTheme
+                      ?  Color(0xFF303030) : Colors.black12
+              ),
+              preferredSize: Size(double.infinity, 0.0)),
+          title: Text(
             'Meeting Details',
             style: TextStyle(
-              color: Colors.white,
+              color: themeNotifier.getTheme() == darkTheme
+                  ? Colors.white : Colors.black54,
             ),
           ),
           actions: [
@@ -948,7 +956,7 @@ class _viewScheduledState extends State<viewScheduled> {
   }
 
   var linkImageUrl = Uri.parse(
-      'https://play-lh.googleusercontent.com/1UPWJehjpgF1SfEccYtNzxHY7U9WAeCqwKx_UnRh-DrrP-NcN2bmjQMI5Ig1o-5xZRTT=s180-rw');
+      'https://play-lh.googleusercontent.com/7ZrxSsCqSNb86h57pPlJ3budCKTTZrCDSB3aq1F-srZnhO4M1iNtCXaM7fvxuJU3Yg=s180-rw');
   Future<Uri> createDynamicLink(
       {@required String meet,
       @required String sub,

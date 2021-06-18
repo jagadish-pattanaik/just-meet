@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:jagu_meet/screens/settings/globalLiveSettings.dart';
-import 'package:jagu_meet/screens/settings/randomSettings.dart';
+import 'package:jagu_meet/screens/meeting/settings/globalLiveSettings.dart';
 import 'package:jagu_meet/theme/theme.dart';
 import 'package:jagu_meet/theme/themeNotifier.dart';
 import 'package:provider/provider.dart';
@@ -29,19 +28,27 @@ class _meetingSettingsState extends State<meetingSettings> {
           leading: IconButton(
             icon: Icon(
               Icons.arrow_back_ios_sharp,
-              color: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: themeNotifier.getTheme() == darkTheme
+              ? Colors.white : Colors.black54),
           backgroundColor: themeNotifier.getTheme() == darkTheme
-              ? Color(0xFF242424)
-              : Colors.blue,
-          elevation: 5,
+              ? Color(0xff0d0d0d)
+              : Color(0xffffffff),
+          elevation: 0,
+          bottom:  PreferredSize(
+              child: Divider(
+                  height: 1,
+                  color: themeNotifier.getTheme() == darkTheme
+                      ?  Color(0xFF303030) : Colors.black12
+              ),
+              preferredSize: Size(double.infinity, 0.0)),
           title: Text(
             'Meeting Settings',
             style: TextStyle(
-              color: Colors.white,
+              color: themeNotifier.getTheme() == darkTheme
+                  ? Colors.white : Colors.black54,
             ),
           ),
         ),
@@ -163,44 +170,6 @@ class _meetingSettingsState extends State<meetingSettings> {
                           context,
                           CupertinoPageRoute(
                               builder: (context) => GlobalSettings())),
-                    ),
-                    Divider(
-                      height: 1,
-                      color: themeNotifier.getTheme() == darkTheme
-                          ? Color(0xFF303030)
-                          : Colors.black12,
-                      indent: 15,
-                      endIndent: 0,
-                    ),
-                    ListTile(
-                      tileColor: themeNotifier.getTheme() == darkTheme
-                          ? Color(0xFF191919)
-                          : Color(0xFFf9f9f9),
-                      title: Text(
-                        "Random Meet Settings",
-                        style: TextStyle(
-                          fontSize: 16,
-                        ),
-                      ),
-                      subtitle: Text('Settings and customization for random meeting', overflow: TextOverflow.ellipsis,),
-                      dense: true,
-                      contentPadding:
-                      EdgeInsets.symmetric(vertical: 0.0, horizontal: 10.0),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 20,
-                            color: Colors.grey,
-                          )
-                        ],
-                      ),
-                      onTap: () => Navigator.push(
-                          context,
-                          CupertinoPageRoute(
-                              builder: (context) => RandomSettings())),
                     ),
                     Divider(
                       height: 1,

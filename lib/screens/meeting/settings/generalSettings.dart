@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
@@ -51,9 +52,11 @@ class _generalSettingsState extends State<generalSettings> {
     prefs.setBool('darkMode', value);
     var darkModeOn = prefs.getBool('darkMode');
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-        statusBarColor: darkModeOn ? Colors.black : Colors.transparent,
+        statusBarColor: Colors.transparent,
       //statusBarIconBrightness: Brightness.dark,
-      //systemNavigationBarColor: Colors.black,
+      systemNavigationBarColor: darkModeOn
+          ? Color(0xff0d0d0d)
+          : Color(0xFFFFFFFF),
       //systemNavigationBarIconBrightness: Brightness.dark,
     ));
     // setBgColor(themeNotifier);
@@ -62,7 +65,9 @@ class _generalSettingsState extends State<generalSettings> {
   @override
   void initState() {
     super.initState();
-    getAppInfo();
+    if (!kIsWeb) {
+      getAppInfo();
+    }
     getSettings();
   }
 
@@ -71,25 +76,34 @@ class _generalSettingsState extends State<generalSettings> {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
     _darkTheme = (themeNotifier.getTheme() == darkTheme);
     return MaterialApp(
+      title: 'Just Meet',
       theme: themeNotifier.getTheme(),
       home: Scaffold(
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(
               Icons.arrow_back_ios_sharp,
-              color: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: themeNotifier.getTheme() == darkTheme
+              ? Colors.white : Colors.black54),
           backgroundColor: themeNotifier.getTheme() == darkTheme
-              ? Color(0xFF242424)
-              : Colors.blue,
-          elevation: 5,
+              ? Color(0xff0d0d0d)
+              : Color(0xffffffff),
+          elevation: 0,
+          bottom: PreferredSize(
+              child: Divider(
+                  height: 1,
+                  color: themeNotifier.getTheme() == darkTheme
+                      ?  Color(0xFF303030) : Colors.black12
+              ),
+              preferredSize: Size(double.infinity, 0.0)),
           title: Text(
             'General Settings',
             style: TextStyle(
-              color: Colors.white,
+              color: themeNotifier.getTheme() == darkTheme
+                  ? Colors.white : Colors.black54,
             ),
           ),
         ),
@@ -100,7 +114,7 @@ class _generalSettingsState extends State<generalSettings> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    ListTile(
+    !kIsWeb == true ? ListTile(
                       tileColor: themeNotifier.getTheme() == darkTheme
                           ? Color(0xFF191919)
                           : Color(0xFFf9f9f9),
@@ -134,15 +148,15 @@ class _generalSettingsState extends State<generalSettings> {
                           )
                         ],
                       ),
-                    ),
-                    Divider(
+                    ) : Container(),
+                    !kIsWeb == true ? Divider(
                       height: 1,
                       color: themeNotifier.getTheme() == darkTheme
                           ? Color(0xFF303030)
                           : Colors.black12,
                       indent: 15,
                       endIndent: 0,
-                    ),
+                    ) : Container(),
                     CupertinoSwitchListTile(
                       title: Text(
                         "Dark Mode",

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:jagu_meet/model/note.dart';
-import 'package:jagu_meet/screens/settings/hostingSettings.dart';
+import 'package:jagu_meet/screens/meeting/settings/hostingSettings.dart';
 //import 'package:jagu_meet/sever_db/host meets db/host controller.dart';
 //import 'package:jagu_meet/sever_db/host meets db/host meet db.dart';
 import 'package:jagu_meet/theme/themeNotifier.dart';
@@ -138,7 +138,7 @@ class _HostPageState extends State<HostPage> with SingleTickerProviderStateMixin
   final serverText = TextEditingController();
   final nameText = TextEditingController();
   final emailText = TextEditingController();
-  final hostRoomText = TextEditingController(text: "ID - ${randomNumeric(11)}");
+  final hostRoomText = TextEditingController(text: randomNumeric(11));
   final hostSubjectText = TextEditingController();
 
   bool isTyping2 = false;
@@ -307,7 +307,7 @@ class _HostPageState extends State<HostPage> with SingleTickerProviderStateMixin
   }
 
   var linkImageUrl = Uri.parse(
-      'https://play-lh.googleusercontent.com/1UPWJehjpgF1SfEccYtNzxHY7U9WAeCqwKx_UnRh-DrrP-NcN2bmjQMI5Ig1o-5xZRTT=s180-rw');
+      'https://play-lh.googleusercontent.com/7ZrxSsCqSNb86h57pPlJ3budCKTTZrCDSB3aq1F-srZnhO4M1iNtCXaM7fvxuJU3Yg=s180-rw');
   Future<Uri> createDynamicLink(
       {@required String meet,
       @required String sub,
@@ -419,7 +419,15 @@ class _HostPageState extends State<HostPage> with SingleTickerProviderStateMixin
         setState(() {
           hateError = false;
         });
-      }else {
+      }else if (!controller.text.contains(hateSpeech[i])) {
+        setState(() {
+          hateError = false;
+        });
+      } else if (!controller.text.toLowerCase().contains(hateSpeech[i])) {
+        setState(() {
+          hateError = false;
+        });
+      } else if (!controller.text.toUpperCase().contains(hateSpeech[i])) {
         setState(() {
           hateError = false;
         });
@@ -489,20 +497,28 @@ class _HostPageState extends State<HostPage> with SingleTickerProviderStateMixin
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(
-              Icons.arrow_back_ios_sharp,
-              color: Colors.white,
+              Icons.clear,
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: themeNotifier.getTheme() == darkTheme
+              ? Colors.white : Colors.black54),
           backgroundColor: themeNotifier.getTheme() == darkTheme
-              ? Color(0xFF242424)
-              : Colors.blue,
-          elevation: 5,
+              ? Color(0xff0d0d0d)
+              : Color(0xffffffff),
+          elevation: 0,
+          bottom: PreferredSize(
+              child: Divider(
+                  height: 1,
+                  color: themeNotifier.getTheme() == darkTheme
+                      ?  Color(0xFF303030) : Colors.black12
+              ),
+              preferredSize: Size(double.infinity, 0.0)),
           title: Text(
             'Start a Meeting',
             style: TextStyle(
-              color: Colors.white,
+              color: themeNotifier.getTheme() == darkTheme
+                  ? Colors.white : Colors.black54,
             ),
           ),
         ),
@@ -883,9 +899,16 @@ class _HostPageState extends State<HostPage> with SingleTickerProviderStateMixin
                     ? IconThemeData(color: Colors.white)
                     : IconThemeData(color: Colors.black),
                 backgroundColor: themeNotifier.getTheme() == darkTheme
-                    ? Color(0xFF191919)
-                    : Colors.white,
+                    ? Color(0xff0d0d0d)
+                    : Color(0xFFFFFFFF),
                 elevation: 0,
+                bottom: PreferredSize(
+                    child: Divider(
+                        height: 1,
+                        color: themeNotifier.getTheme() == darkTheme
+                            ?  Color(0xFF303030) : Colors.black12
+                    ),
+                    preferredSize: Size(double.infinity, 0.0)) ,
                 centerTitle: true,
                 leading: IconButton(
                   icon: Icon(Icons.keyboard_arrow_down_rounded),
@@ -912,8 +935,7 @@ class _HostPageState extends State<HostPage> with SingleTickerProviderStateMixin
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: themeNotifier.getTheme() == darkTheme
-                        ? Colors.white
-                        : Colors.black,
+                        ? Colors.white : Colors.black54,
                   ),
                 ),
               ),

@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class fullImage extends StatefulWidget {
@@ -25,7 +26,7 @@ class _fullImageState extends State<fullImage> {
           titleTextStyle: TextStyle(color: Colors.white),
           leading: IconButton(
             icon: Icon(
-              Icons.arrow_back,
+              Icons.arrow_back_ios_sharp,
               color: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(),
@@ -39,7 +40,7 @@ class _fullImageState extends State<fullImage> {
               height: MediaQuery.of(context).size.height*0.80,
               width: MediaQuery.of(context).size.width*0.80,
               imageUrl:  widget.url,
-              placeholder: (context, url) => CircularProgressIndicator(),
+              placeholder: (context, url) => CupertinoActivityIndicator(animating: true, ),
               errorWidget: (context, url, error) => Icon(Icons.error),
             ),
           ),

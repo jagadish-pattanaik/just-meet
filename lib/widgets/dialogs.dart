@@ -18,9 +18,7 @@ class Dialogs{
       context: context,
       barrierDismissible: true,
     builder: (BuildContext context) {
-      var _darkTheme;
       final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-      _darkTheme = (themeNotifier.getTheme() == darkTheme);
         return Theme(
             data: themeNotifier.getTheme(),
       child:
@@ -42,7 +40,7 @@ class Dialogs{
               child: Text(Yes,
                 overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: themeNotifier.getTheme() == darkTheme ? Colors.blueAccent : Colors.blue,
+                color: themeNotifier.getTheme() == darkTheme ? Color(0xff0184dc) : Colors.blue,
               ),),
             ),
             FlatButton(
@@ -54,7 +52,7 @@ class Dialogs{
               child: Text(No,
                 overflow: TextOverflow.ellipsis,
       style: TextStyle(
-      color: themeNotifier.getTheme() == darkTheme ? Colors.blueAccent : Colors.blue,
+      color: themeNotifier.getTheme() == darkTheme ? Color(0xff0184dc) : Colors.blue,
       ),),
             )
           ],

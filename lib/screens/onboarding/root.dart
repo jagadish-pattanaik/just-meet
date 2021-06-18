@@ -1,11 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:jagu_meet/screens/onboarding/ppolicy.dart';
-import 'user/loginPage.dart';
+import '../user/loginPage.dart';
 import 'package:jagu_meet/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'meeting/meetweb/meetWeb.dart';
 
 class root extends StatefulWidget {
   @override
@@ -55,11 +53,7 @@ class _rootState extends State<root> {
         return PriPolicy();
       }
     } else {
-      if (signStatus == true) {
-        return meetWeb();
-      } else {
         return LoginScreen();
-      }
     }
   }
 }

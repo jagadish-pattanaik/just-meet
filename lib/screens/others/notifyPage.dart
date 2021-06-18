@@ -4,9 +4,9 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:jagu_meet/screens/others/webview.dart';
 import 'package:jagu_meet/theme/theme.dart';
 import 'package:jagu_meet/theme/themeNotifier.dart';
+import 'package:package_info/package_info.dart';
 import 'package:provider/provider.dart';
 import 'package:overlay_support/overlay_support.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Notify extends StatefulWidget {
@@ -18,22 +18,15 @@ class Notify extends StatefulWidget {
 
 class _NotifyState extends State<Notify> {
   bool visible = true;
-  var _darkTheme;
-  RefreshController _refreshController = RefreshController(
-    initialRefresh: false,
-  );
 
   final InAppReview inAppReview = InAppReview.instance;
 
-  void _onRefresh() async {
-    setState(() {});
-    _refreshController.refreshCompleted();
-  }
-
-  void _onLoading() async {
-    await Future.delayed(Duration(milliseconds: 1000));
-    if (mounted) setState(() {});
-    _refreshController.loadComplete();
+  var version;
+  getAppInfo() async {
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      version = packageInfo.version;
+    });
   }
 
   reviewAvailabled() async {
@@ -57,26 +50,33 @@ class _NotifyState extends State<Notify> {
     }
   }
 
-  launchWebView(var URL, var TITLE) {
+  launchWebView(var url, var title) {
     Navigator.push(
         context,
         CupertinoPageRoute(
             builder: (context) => AppWebView(
-                  url: URL,
-                  title: TITLE,
+                  url: url,
+                  title: title,
                 )));
+  }
+
+  requestReview() async {
+    if (await inAppReview.isAvailable()) {
+      inAppReview.requestReview();
+    }
   }
 
   @override
   void initState() {
     super.initState();
-    //reviewAvailabled();
+    reviewAvailabled();
+    requestReview();
+    getAppInfo();
   }
 
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     return OverlaySupport(
       child: MaterialApp(
         title: 'Just Meet',
@@ -87,37 +87,33 @@ class _NotifyState extends State<Notify> {
           appBar: AppBar(
             leading: IconButton(
               icon: Icon(
-                Icons.arrow_back,
-                color: Colors.white,
+                Icons.arrow_back_ios_sharp,
               ),
               onPressed: () => Navigator.of(context).pop(),
             ),
-            iconTheme: IconThemeData(color: Colors.white),
+            iconTheme: IconThemeData(color: themeNotifier.getTheme() == darkTheme
+                ? Colors.white : Colors.black54),
             backgroundColor: themeNotifier.getTheme() == darkTheme
-                ? Color(0xFF242424)
-                : Colors.blue,
-            elevation: 5,
+                ? Color(0xff0d0d0d)
+                : Color(0xFFFFFFFF),
+            elevation:  0,
+            bottom: PreferredSize(
+                child: Divider(
+                    height: 1,
+                    color: themeNotifier.getTheme() == darkTheme
+                        ?  Color(0xFF303030) : Colors.black12
+                ),
+                preferredSize: Size(double.infinity, 0.0)),
             title: Text(
               'Notifications',
               style: TextStyle(
-                color: Colors.white,
+                color: themeNotifier.getTheme() == darkTheme
+                    ? Colors.white : Colors.black54,
               ),
             ),
           ),
           body: SafeArea(
-            child: SmartRefresher(
-              enablePullDown: true,
-              enablePullUp: false,
-              header: WaterDropMaterialHeader(
-                color: Colors.white,
-                backgroundColor: themeNotifier.getTheme() == darkTheme
-                    ? Color(0xFF242424)
-                    : Colors.blue,
-              ),
-              controller: _refreshController,
-              onRefresh: _onRefresh,
-              onLoading: _onLoading,
-              child: Container(
+            child: Container(
                 child: SingleChildScrollView(
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
@@ -145,7 +141,7 @@ class _NotifyState extends State<Notify> {
                                           Icon(Icons.notification_important))),
                               title: Text('New Update!'),
                               subtitle: Text(
-                                  'New version 3.0.0! Make sure all participants have it.'),
+                                  'New version $version! Make sure all participants have it.', overflow: TextOverflow.ellipsis,),
                               trailing: Icon(Icons.arrow_forward_ios),
                             ),
                           ),
@@ -169,7 +165,7 @@ class _NotifyState extends State<Notify> {
                                   child: ClipOval(child: Icon(Icons.comment))),
                               title: Text('Join Our Slack Community'),
                               subtitle: Text(
-                                  'There is a slack community which can help you with Just Meet!'),
+                                  'There is a slack community which can help you with Just Meet!', overflow: TextOverflow.ellipsis,),
                               trailing: Icon(Icons.arrow_forward_ios),
                             ),
                           ),
@@ -177,6 +173,7 @@ class _NotifyState extends State<Notify> {
                         SizedBox(
                           height: 10,
                         ),
+                        visible ?
                         Card(
                           color: themeNotifier.getTheme() == darkTheme
                               ? Color(0xFF242424)
@@ -194,14 +191,14 @@ class _NotifyState extends State<Notify> {
                                       child: Icon(Icons.thumb_up_alt_sharp))),
                               title: Text('Rate Us'),
                               subtitle: Text(
-                                  'Rate Just Meet in play store and give a review!'),
+                                  'Rate Just Meet in play store and give a review!', overflow: TextOverflow.ellipsis,),
                               trailing: Icon(Icons.arrow_forward_ios),
                             ),
                           ),
-                        ),
-                        SizedBox(
+                        ) : Container(),
+                        visible ? SizedBox(
                           height: 10,
-                        ),
+                        ) : Container(),
                         Card(
                           color: themeNotifier.getTheme() == darkTheme
                               ? Color(0xFF242424)
@@ -220,7 +217,7 @@ class _NotifyState extends State<Notify> {
                                       child: Icon(Icons.code))),
                               title: Text('Know about the Developer'),
                               subtitle: Text(
-                                  'Know about the person who developed Just Meet for you with love!'),
+                                  'Know about the person who developed Just Meet for you with love!', overflow: TextOverflow.ellipsis,),
                               trailing: Icon(Icons.arrow_forward_ios),
                             ),
                           ),
@@ -234,7 +231,6 @@ class _NotifyState extends State<Notify> {
             ),
           ),
         ),
-      ),
     );
   }
 }

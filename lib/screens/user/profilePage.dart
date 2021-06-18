@@ -8,8 +8,8 @@ import 'package:jagu_meet/widgets/dialogs.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'loginPage.dart';
-import 'others/fullImage.dart';
-import 'others/infoPage.dart';
+import '../others/fullImage.dart';
+import '../others/infoPage.dart';
 
 class profilePage extends StatefulWidget {
   final name;
@@ -60,25 +60,34 @@ class _profilePageState extends State<profilePage> {
       _userPhotoUrl = widget.photoURL;
     });
     return MaterialApp(
+      title: 'Just Meet',
       theme: themeNotifier.getTheme(),
       home: Scaffold(
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(
               Icons.arrow_back_ios_sharp,
-              color: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: themeNotifier.getTheme() == darkTheme
+              ? Colors.white : Colors.black54),
           backgroundColor: themeNotifier.getTheme() == darkTheme
-              ? Color(0xFF242424)
-              : Colors.blue,
-          elevation: 5,
+              ? Color(0xff0d0d0d)
+              : Color(0xffffffff),
+          elevation: 0,
+          bottom: PreferredSize(
+              child: Divider(
+                  height: 1,
+                  color: themeNotifier.getTheme() == darkTheme
+                      ?  Color(0xFF303030) : Colors.black12
+              ),
+              preferredSize: Size(double.infinity, 0.0)),
           title: Text(
             'Profile',
             style: TextStyle(
-              color: Colors.white,
+              color: themeNotifier.getTheme() == darkTheme
+                  ? Colors.white : Colors.black54,
             ),
           ),
         ),

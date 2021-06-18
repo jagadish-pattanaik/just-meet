@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:grouped_buttons/grouped_buttons.dart';
 //import 'package:jagu_meet/sever_db/report_abuse/report_db.dart';
 //import 'package:jagu_meet/sever_db/report_abuse/report_db_controller.dart';
@@ -23,7 +22,6 @@ class Report extends StatefulWidget {
 }
 
 class _ReportState extends State<Report> {
-  var _darkTheme;
   FocusNode myFocusNode = FocusNode();
   final reportText = TextEditingController();
 
@@ -34,14 +32,7 @@ class _ReportState extends State<Report> {
     if (await canLaunch(url)) {
       await launch(url);
     } else {
-      Fluttertoast.showToast(
-          msg: 'Failed...Please check your internet connection',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
+      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
     }
   }
 
@@ -72,7 +63,6 @@ class _ReportState extends State<Report> {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     final bool showFab = MediaQuery.of(context).viewInsets.bottom == 0.0;
     return MaterialApp(
       title: 'Just Meet',
@@ -80,22 +70,30 @@ class _ReportState extends State<Report> {
       theme: themeNotifier.getTheme(),
       home: Scaffold(
         appBar: AppBar(
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: themeNotifier.getTheme() == darkTheme
+              ? Colors.white : Colors.black54),
           backgroundColor: themeNotifier.getTheme() == darkTheme
-              ? Color(0xFF242424)
-              : Colors.blue,
-          elevation: 5,
+              ? Color(0xff0d0d0d)
+              : Color(0xffffffff),
+          elevation: 0,
+          bottom: PreferredSize(
+              child: Divider(
+                  height: 1,
+                  color: themeNotifier.getTheme() == darkTheme
+                      ?  Color(0xFF303030) : Colors.black12
+              ),
+              preferredSize: Size(double.infinity, 0.0)),
           leading: IconButton(
             icon: Icon(
-              Icons.arrow_back,
-              color: Colors.white,
+              Icons.arrow_back_ios_sharp,
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(
             'Report Abuse',
             style: TextStyle(
-              color: Colors.white,
+              color: themeNotifier.getTheme() == darkTheme
+                  ? Colors.white : Colors.black54,
             ),
           ),
         ),
@@ -126,16 +124,12 @@ class _ReportState extends State<Report> {
                   'email: ${widget.email}'),
           label: Text('Contact Us',
               style: TextStyle(
-                  color: themeNotifier.getTheme() == darkTheme
-                      ? Colors.blueAccent
-                      : Colors.white,
+                  color: Colors.white,
                   fontWeight: FontWeight.bold)),
-          icon: Icon(Icons.add,
-              color: themeNotifier.getTheme() == darkTheme
-                  ? Colors.blueAccent
-                  : Colors.white),
+          icon: Icon(Icons.mail_outline,
+              color: Colors.white),
           backgroundColor: themeNotifier.getTheme() == darkTheme
-              ? Color(0xFF242424)
+              ? Color(0xff0184dc)
               : Colors.blue,
         ) :  Container(),
         body: SafeArea(
@@ -167,11 +161,13 @@ class _ReportState extends State<Report> {
                   SizedBox(
                     height: 10,
                   ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10,
-                    ),
-                    child: TextField(
+              Divider(
+                height: 1,
+                color: themeNotifier.getTheme() == darkTheme
+                    ? Color(0xFF303030)
+                    : Colors.black12,
+              ),
+              TextField(
                       focusNode: myFocusNode,
                       keyboardType: TextInputType.multiline,
                       autofocus: false,
@@ -181,37 +177,29 @@ class _ReportState extends State<Report> {
                         isEmpty();
                       },
                       decoration: InputDecoration(
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(
-                                color: Colors.blue, width: 1.0),
-                            borderRadius: BorderRadius.circular(15.0),
-                          ),
                           counterText: '',
                           isDense: true,
                           filled: true,
                           contentPadding: const EdgeInsets.only(
                               top: 12.0, bottom: 12, left: 10),
-                          border: OutlineInputBorder(
-                            borderRadius: const BorderRadius.all(
-                              const Radius.circular(10.0),
-                            ),
-                          ),
-                          floatingLabelBehavior: FloatingLabelBehavior.always,
-                          labelText: "Tell us more",
-                          labelStyle: TextStyle(
-                            color: Colors.blue,
-                          ),
+                          border: InputBorder.none,
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
                           fillColor: themeNotifier.getTheme() == darkTheme
                               ? Color(0xFF191919)
                               : Color(0xFFf9f9f9),
                           hintText: 'More Information'),
                     ),
+                  Divider(
+                    height: 1,
+                    color: themeNotifier.getTheme() == darkTheme
+                        ? Color(0xFF303030)
+                        : Colors.black12,
                   ),
                   SizedBox(
-                    height: 40.0,
+                    height: 30.0,
                   ),
                   SizedBox(
-                    height: 45.0,
+                    height: 50.0,
                     width: MediaQuery.of(context).size.width * 0.90,
                     child: RaisedButton(
                       disabledColor: themeNotifier.getTheme() == darkTheme
@@ -227,16 +215,9 @@ class _ReportState extends State<Report> {
                         borderRadius: BorderRadius.circular(15.0),
                       ),
                       onPressed: isButtonEnabled
-                          ? () async {
+                          ? () {
                               //_submitAbuseData(widget.email, widget.userid, rType, reportText.text);
-                              Fluttertoast.showToast(
-                                  msg: 'Report Submitted!',
-                                  toastLength: Toast.LENGTH_SHORT,
-                                  gravity: ToastGravity.SNACKBAR,
-                                  timeInSecForIosWeb: 1,
-                                  backgroundColor: Colors.black,
-                                  textColor: Colors.white,
-                                  fontSize: 16.0);
+                        ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('Reported',)));
                               reportText.clear();
                             }
                           : null,
@@ -246,7 +227,7 @@ class _ReportState extends State<Report> {
                             fontSize: 17, fontWeight: FontWeight.bold),
                       ),
                       color: themeNotifier.getTheme() == darkTheme
-                          ? Colors.blueAccent
+                          ? Color(0xff0184dc)
                           : Colors.blue,
                     ),
                   ),

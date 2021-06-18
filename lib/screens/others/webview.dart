@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_offline/flutter_offline.dart';
+import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:connectivity/connectivity.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:jagu_meet/theme/themeNotifier.dart';
 import 'package:jagu_meet/theme/theme.dart';
 import 'package:provider/provider.dart';
@@ -25,7 +26,6 @@ class WebViewState extends State<AppWebView> {
   WebViewState(this.url, this.title);
 
   bool isLoading = true;
-  var _darkTheme;
   Completer<WebViewController> _controller = Completer<WebViewController>();
 
   @override
@@ -40,21 +40,13 @@ class WebViewState extends State<AppWebView> {
   checkConnection() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
     if (connectivityResult == ConnectivityResult.none) {
-      Fluttertoast.showToast(
-          msg: 'No Internet Connection!',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.SNACKBAR,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
+      ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
     } else {}
   }
 
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
-    _darkTheme = (themeNotifier.getTheme() == darkTheme);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: themeNotifier.getTheme(),
@@ -62,43 +54,37 @@ class WebViewState extends State<AppWebView> {
         appBar: AppBar(
           title: Text(
             title,
+            style: TextStyle(color: themeNotifier.getTheme() == darkTheme
+                ? Colors.white : Colors.black54,),
           ),
           centerTitle: true,
           leading: IconButton(
             icon: Icon(
               Icons.clear,
-              color: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
           actions: [
             IconButton(
               icon: Icon(
-                Icons.open_in_new_outlined,
-                color: Colors.white,
+                Icons.more_vert_rounded,
               ),
-              onPressed: () async {
-                var url = widget.url;
-                if (await canLaunch(url)) {
-                await launch(url);
-                } else {
-                Fluttertoast.showToast(
-                msg: 'Failed...Please check your internet connection',
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.SNACKBAR,
-                timeInSecForIosWeb: 1,
-                backgroundColor: Colors.black,
-                textColor: Colors.white,
-                fontSize: 16.0);
-                }
-              }
+              onPressed: () => showActionSheet(),
             ),
           ],
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: themeNotifier.getTheme() == darkTheme
+              ? Colors.white : Colors.black54),
           backgroundColor: themeNotifier.getTheme() == darkTheme
-              ? Color(0xFF242424)
-              : Colors.blue,
-          elevation: 5,
+              ? Color(0xff0d0d0d)
+              : Color(0xffffffff),
+          elevation: 0,
+          bottom: PreferredSize(
+              child: Divider(
+                  height: 1,
+                  color: themeNotifier.getTheme() == darkTheme
+                      ?  Color(0xFF303030) : Colors.black12
+              ),
+              preferredSize: Size(double.infinity, 0.0)),
         ),
         body: SafeArea(
           child: OfflineBuilder(
@@ -146,10 +132,7 @@ class WebViewState extends State<AppWebView> {
                 isLoading
                     ? Center(
                         child: Center(
-                            child: CircularProgressIndicator(
-                        valueColor:
-                            new AlwaysStoppedAnimation<Color>(Colors.blue),
-                      )))
+                            child: CupertinoActivityIndicator(animating: true),))
                     : Container(),
               ],
             ),
@@ -157,5 +140,75 @@ class WebViewState extends State<AppWebView> {
         ),
       ),
     );
+  }
+
+  showActionSheet() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
+    showCupertinoModalPopup(
+      context: context,
+      builder: (BuildContext context) => CupertinoActionSheet(
+          actions: <Widget>[
+      Container(
+      color:themeNotifier.getTheme() == darkTheme
+          ? Color(0xFF242424)
+          : Colors.white,
+        child: CupertinoActionSheetAction(
+              child: Text('Open in browser',
+                style: TextStyle(color: themeNotifier.getTheme() == darkTheme
+                  ? Colors.white
+                  : Colors.blue,),),
+              isDefaultAction: true,
+              onPressed: () async {
+                var url = widget.url;
+                if (await canLaunch(url)) {
+                  await launch(url);
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(new SnackBar(content: Text('No internet connection!',)));
+                }
+                Navigator.pop(context,);
+              },
+            ),
+      ),
+    Container(
+    color:themeNotifier.getTheme() == darkTheme
+    ? Color(0xFF242424)
+        : Colors.white,
+    child: CupertinoActionSheetAction(
+              child: Text('Share',
+                style: TextStyle(color: themeNotifier.getTheme() == darkTheme
+                    ? Colors.white
+                    : Colors.blue,),),
+              isDefaultAction: true,
+              onPressed: () {
+                _share(widget.url);
+                Navigator.pop(context);
+              },
+            ),
+    ),
+          ],
+          cancelButton: Container(
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+              color:themeNotifier.getTheme() == darkTheme
+                  ? Color(0xFF242424)
+                  : Colors.white,
+            ),
+              child: CupertinoActionSheetAction(
+            child: Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold),),
+            isDestructiveAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          )),
+      ),
+    );
+  }
+
+  _share(String text) {
+    final textshare = text;
+    final RenderBox box = context.findRenderObject();
+    Share.share(textshare,
+        subject: text,
+        sharePositionOrigin: box.localToGlobal(Offset.zero) & box.size);
   }
 }

@@ -49,25 +49,34 @@ class _advancedSettingsState extends State<advancedSettings> {
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context, listen: false);
     return MaterialApp(
+      title: 'Just Meet',
       theme: themeNotifier.getTheme(),
       home: Scaffold(
         appBar: AppBar(
           leading: IconButton(
             icon: Icon(
               Icons.arrow_back_ios_sharp,
-              color: Colors.white,
             ),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          iconTheme: IconThemeData(color: Colors.white),
+          iconTheme: IconThemeData(color: themeNotifier.getTheme() == darkTheme
+              ? Colors.white : Colors.black54),
           backgroundColor: themeNotifier.getTheme() == darkTheme
-              ? Color(0xFF242424)
-              : Colors.blue,
-          elevation: 5,
+              ? Color(0xff0d0d0d)
+              : Color(0xffffffff),
+          elevation: 0,
+          bottom: PreferredSize(
+              child: Divider(
+                  height: 1,
+                  color: themeNotifier.getTheme() == darkTheme
+                      ?  Color(0xFF303030) : Colors.black12
+              ),
+              preferredSize: Size(double.infinity, 0.0)),
           title: Text(
             'Advanced Settings',
             style: TextStyle(
-              color: Colors.white,
+              color: themeNotifier.getTheme() == darkTheme
+                  ? Colors.white : Colors.black54,
             ),
           ),
         ),
@@ -373,11 +382,14 @@ class _advancedSettingsState extends State<advancedSettings> {
     ),
           ],
           cancelButton: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
               color:themeNotifier.getTheme() == darkTheme
                   ? Color(0xFF242424)
                   : Colors.white,
+            ),
               child: CupertinoActionSheetAction(
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.bold),),
             isDestructiveAction: true,
             onPressed: () {
               Navigator.pop(context);
