@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="HandheldFriendly" content="true" />
+  <meta name="robots" content="index, follow" />
+  <meta name="description" content="Just Meet Video Conferencing">
+  <title>Just Meet</title>
+
+  <meta name="keywords" content="Just, Just Meet, meet, meeting, video, video conferencing, conferencing, just, just meet, just technologies, jagadish, jagadish prasad pattanaik, jagadish pattanaik">
+  <meta name="author" content="Just Technologies">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Just Meet">
+
+  <meta name="google-signin-client_id" content="460297325343-pq19vhm1m48fad9hc5lvqtq9v4874eit.apps.googleusercontent.com">
+
+
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-app.js"></script>
+
+  <div class="unSelectable">
+  <img src="icons/ssicon.png" alt="Just Meet logo" width="150" height="150" draggable="false" (dragstart)="false;" class="center"/>
+  </div>
+
+  <!-- TODO: Add SDKs for Firebase products that you want to use
+       https://firebase.google.com/docs/web/setup#available-libraries -->
+  <script src="https://www.gstatic.com/firebasejs/7.15.5/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.2/firebase-analytics.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebase/8.6.2/firebase.js"></script>
+
+  <script>
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  var firebaseConfig = {
+    apiKey: "AIzaSyA0upu1GfWSpczL9eyiczU0yBq7ERmsHdo",
+    authDomain: "jmeet-8e163.firebaseapp.com",
+    databaseURL: "https://jmeet-8e163.firebaseio.com",
+    projectId: "jmeet-8e163",
+    storageBucket: "jmeet-8e163.appspot.com",
+    messagingSenderId: "460297325343",
+    appId: "1:460297325343:web:1cb0b2ecad7c0fd7f6fe2a",
+    measurementId: "G-9Q7V0HQC3W"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
+</script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('flutter-first-frame', function () {
+        navigator.serviceWorker.register('flutter_service_worker.js');
+      });
+    }
+  </script>
+
+  <script src="https://meet.jit.si/external_api.js" type="application/javascript"></script>
+
+  <script src="main.dart.js" type="application/javascript"></script>
+</body>
+</html>
